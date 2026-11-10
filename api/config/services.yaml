@@ -11,7 +11,7 @@ parameters:
     app.prompt.shopping: system_v5
     app.prompt.onboarding: onboarding_v3
     app.prompt.kickoff: kickoff_v1
-    app.prompt.recipe: recipe_v2
+    app.prompt.recipe: recipe_v3
     app.prompt.memory_review: memory_review_v2
     # Fuseau horaire utilisé pour donner la date du jour à l'IA.
     app.user_timezone: Europe/Paris

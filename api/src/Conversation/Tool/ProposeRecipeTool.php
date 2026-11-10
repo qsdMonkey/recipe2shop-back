@@ -7,6 +7,7 @@ namespace App\Conversation\Tool;
 use App\Entity\Recipe;
 use App\Entity\SessionRecipe;
 use App\Ingredient\IngredientMatcher;
+use App\Memory\MemoryManager;
 use App\Recipe\RecipeGenerationException;
 use App\Recipe\RecipeGenerator;
 use App\Repository\SessionRecipeRepository;
@@ -77,7 +78,14 @@ final class ProposeRecipeTool implements ToolHandlerInterface
 
         $recipe = new Recipe($generated->data, $context->user, $this->generator->promptVersion());
         foreach ($recipe->getIngredients() as $ingredient) {
-            $ingredient->linkIngredient($this->matcher->findOrCreate($ingredient->getName(), $ingredient->getCategory()));
+            $reference = $this->matcher->findOrCreate($ingredient->getName(), $ingredient->getCategory());
+            $ingredient->linkIngredient($reference);
+            // Même nom au référentiel aux accents / à la casse près : on affiche l'orthographe du référentiel.
+            // (seulement si le nom de la recette n'a aucun accent : on ne remplace jamais une orthographe correcte).
+            if (!$reference->isToReview() && 1 !== preg_match('/[^\x00-\x7F]/', $ingredient->getName())
+                && MemoryManager::normalize($ingredient->getName()) === MemoryManager::normalize($reference->getName())) {
+                $ingredient->rename($reference->getName());
+            }
         }
         $sessionRecipe = new SessionRecipe($context->session, $recipe, $generated->data['suggested_day'], $this->sessionRecipes->nextPosition($context->session), $generated->warnings);
         $this->em->persist($recipe);

@@ -23,6 +23,7 @@ log "Migrations…"
 "${COMPOSE[@]}" run --rm --no-deps php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
 log "Référentiel d'ingrédients…"
 "${COMPOSE[@]}" run --rm --no-deps php php bin/console app:ingredients:sync --no-interaction
+"${COMPOSE[@]}" run --rm --no-deps php php bin/console app:ingredients:fix-accents --no-interaction
 
 log "Démarrage de l'API et du worker…"
 "${COMPOSE[@]}" up -d --remove-orphans php worker

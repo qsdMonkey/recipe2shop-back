@@ -90,6 +90,12 @@ class Ingredient
         return $this->name;
     }
 
+    /** Nom lisible corrigé (ex. accents restaurés sur un ingrédient « to_review »). La clé normalisée ne change pas. */
+    public function rename(string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function getNormalizedName(): string
     {
         return $this->normalizedName;

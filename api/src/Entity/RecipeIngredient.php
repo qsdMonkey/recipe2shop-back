@@ -72,6 +72,12 @@ class RecipeIngredient
         $this->ingredient = $ingredient;
     }
 
+    /** Nom affiché corrigé (accents), la quantité et l'unité ne changent pas. */
+    public function rename(string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function getName(): string
     {
         return $this->name;

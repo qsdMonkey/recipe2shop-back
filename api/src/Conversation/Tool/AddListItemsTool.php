@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Conversation\Tool;
 
 use App\Entity\ShoppingItemOrigin;
+use App\Ingredient\AccentRestorer;
 use App\Recipe\RecipeVocabulary;
 use App\Repository\ShoppingListRepository;
 use App\ShoppingList\ShoppingListService;
@@ -21,6 +22,7 @@ final class AddListItemsTool implements ToolHandlerInterface
         private readonly ShoppingListRepository $lists,
         private readonly ShoppingListService $service,
         private readonly EntityManagerInterface $em,
+        private readonly AccentRestorer $accents,
     ) {
     }
 
@@ -76,7 +78,7 @@ final class AddListItemsTool implements ToolHandlerInterface
             $unit = \is_string($item['unit'] ?? null) && \in_array($item['unit'], RecipeVocabulary::UNITS, true) ? $item['unit'] : null;
             $quantity = is_numeric($item['quantity'] ?? null) && $item['quantity'] > 0 ? (float) $item['quantity'] : null;
             $category = \is_string($item['category'] ?? null) ? $item['category'] : null;
-            $this->service->addItem($list, ShoppingItemOrigin::Assistant, $label, $quantity, $unit, $category);
+            $this->service->addItem($list, ShoppingItemOrigin::Assistant, $this->accents->restore($label), $quantity, $unit, $category);
             $added[] = $label;
         }
         $this->em->flush();

@@ -14,6 +14,7 @@ use App\Gemini\GeminiException;
 use App\Gemini\GeminiPurpose;
 use App\Gemini\GeminiRequest;
 use App\Gemini\ThinkingLevels;
+use App\Ingredient\AccentRestorer;
 use App\Memory\MemoryManager;
 use App\Prompt\PromptLoader;
 use App\Repository\UserMemoryRepository;
@@ -38,6 +39,7 @@ final class RecipeGenerator
         private readonly ValidatorInterface $validator,
         private readonly GenerationLogger $logger,
         private readonly ThinkingLevels $thinkingLevels,
+        private readonly AccentRestorer $accents,
         #[Autowire('%app.prompt.recipe%')]
         private readonly string $promptVersion,
         #[Autowire('%app.user_timezone%')]
@@ -87,6 +89,10 @@ final class RecipeGenerator
                 $errors = $this->validate($data, $session->getPeriodDays());
                 if ([] === $errors) {
                     $data = self::normalize($data);
+                    // Gemini oublie parfois les accents (« tortilla de ble ») : restaurés sur les noms d'ingrédients.
+                    foreach ($data['ingredients'] as $i => $ingredient) {
+                        $data['ingredients'][$i]['name'] = $this->accents->restore($ingredient['name']);
+                    }
 
                     return new GeneratedRecipe($data, $this->warnings($session, $data), $attempt);
                 }

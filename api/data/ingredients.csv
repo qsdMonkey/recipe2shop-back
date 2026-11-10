@@ -144,13 +144,13 @@ mayonnaise;epicerie;g;180;;0;mayo
 ketchup;epicerie;g;365;;0;
 pesto;epicerie;g;30;;0;pesto vert|pesto rosso
 curry;epicerie;cac;730;;0;curry en poudre|poudre de curry
-pate de curry;epicerie;g;180;;0;pate de curry rouge|pate de curry vert
+pâte de curry;epicerie;g;180;;0;pate de curry rouge|pate de curry vert
 cumin;epicerie;cac;730;;0;cumin en poudre
 paprika;epicerie;cac;730;;0;paprika fume
 curcuma;epicerie;cac;730;;0;
 cannelle;epicerie;cac;730;;0;cannelle en poudre
 piment;epicerie;cac;730;;0;piment d'espelette|piment en poudre|piment de cayenne|flocons de piment
-herbes de provence;epicerie;cac;730;;0;herbes de provence sechees
+herbes de Provence;epicerie;cac;730;;0;herbes de provence sechees
 origan;epicerie;cac;730;;0;origan seche
 thym séché;epicerie;cac;730;;0;thym|thym seche
 laurier;epicerie;piece;730;;0;feuille de laurier
@@ -216,6 +216,6 @@ sel;epicerie;pincee;3650;;1;sel fin|gros sel|fleur de sel
 poivre;epicerie;pincee;3650;;1;poivre noir|poivre moulu
 huile d'olive;epicerie;cas;730;;1;huile
 huile neutre;epicerie;cas;730;;1;huile de tournesol|huile vegetale|huile de colza
-huile de sesame;epicerie;cas;365;;1;
+huile de sésame;epicerie;cas;365;;1;
 vinaigre;epicerie;cas;730;;1;vinaigre de vin|vinaigre de cidre|vinaigre de riz
 eau;boissons;ml;3650;;1;eau froide|eau chaude|eau bouillante
