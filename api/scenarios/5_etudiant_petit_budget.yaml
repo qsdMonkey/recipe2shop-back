@@ -1,0 +1,20 @@
+name: etudiant_petit_budget
+description: "Étudiant débutant, petit budget, sans four : recettes simples, valides, sans four"
+memory:
+  foyer: "1 adulte (étudiant)"
+  regime: "aucun"
+  contrainte: "petit budget"
+  niveau_cuisine: "débutant"
+  ustensile: ["plaques de cuisson", micro-ondes]
+  frequence_courses: "toutes les semaines"
+steps:
+  - start: shopping
+  - say: "J'ai juste des pâtes et du riz. Il me faut 4 dîners cette semaine, avec un budget serré. Propose-moi un premier plat."
+    expect:
+      tools: [set_meal_plan]
+  - accept_until_covered: {max: 4, meals: 3}
+checks:
+  recipe_tool_errors_max: 1
+soft_checks:
+  recipes_difficulty: [easy]
+  recipe_tool_errors_max: 0

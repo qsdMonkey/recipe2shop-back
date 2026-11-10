@@ -1,0 +1,25 @@
+name: onboarding_famille
+description: "Onboarding d'une famille de 4 avec une allergie à l'arachide, des gamelles et un airfryer (< 3 min, mémoire correcte)"
+steps:
+  - start: onboarding
+  - say: "Salut ! On est 4 à la maison : mon mari, moi et nos deux enfants de 6 et 9 ans. Le plus petit est allergique à l'arachide."
+    expect:
+      tools: [update_memory]
+  - say: "On fait les courses toutes les semaines, le samedi. Mon mari et moi on prend une gamelle le midi au travail."
+    expect:
+      tools: [update_memory]
+  - say: "On a un four, un micro-ondes, et je viens de m'acheter un airfryer ! Je cuisine pas mal, mais en semaine j'ai 30 minutes max."
+  - finish_onboarding: true
+checks:
+  onboarding_completed: true
+  blocks_seen: [finish_onboarding]
+  memory_contains:
+    foyer: "2 enfants"
+    allergie: "arachide"
+    ustensile: "airfryer"
+    frequence_courses: "semaine"
+  max_ai_seconds: 180
+soft_checks:
+  memory_contains:
+    habitude: "gamelle"
+    contrainte: "30"

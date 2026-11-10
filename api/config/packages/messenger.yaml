@@ -1,0 +1,23 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # Asynchrone (relecture mémoire de fin de conversation, étape 5), consommé par le service "worker".
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 3
+                    delay: 10000
+                    multiplier: 3
+            failed: 'doctrine://default?queue_name=failed'
+            sync: 'sync://'
+
+        routing:
+            'App\Message\MemoryReviewMessage': async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'

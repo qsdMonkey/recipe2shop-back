@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity;
+
+enum MemoryAction: string
+{
+    case Add = 'add';
+    case Update = 'update';
+    case Delete = 'delete';
+}

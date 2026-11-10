@@ -1,0 +1,36 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: true
+
+    # Derrière le reverse proxy HTTPS : X-Forwarded-* acceptés seulement depuis les plages privées.
+    # Indispensable pour que les rate limiters (inscription, connexion) voient la vraie IP du client.
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-port']
+
+    # API JSON en snake_case (client_id…) ↔ propriétés PHP en camelCase.
+    serializer:
+        name_converter: 'serializer.name_converter.camel_case_to_snake_case'
+
+    http_client:
+        scoped_clients:
+            # Client HTTP de l'API Gemini : la clé ne sort jamais du serveur.
+            gemini.client:
+                base_uri: 'https://generativelanguage.googleapis.com/'
+                headers:
+                    x-goog-api-key: '%env(GEMINI_API_KEY)%'
+                timeout: 30
+                max_duration: 45
+
+    #esi: true
+    #fragments: true
+
+when@test:
+    framework:
+        test: true
+        http_client:
+            mock_response_factory: App\Tests\Support\FakeGemini
+        session:
+            storage_factory_id: session.storage.factory.mock_file

@@ -1,0 +1,33 @@
+framework:
+    rate_limiter:
+        # Messages envoyés à l'IA (Gemini est payant). Clé = id utilisateur.
+        # Appliqué à chaque tour qui appelle Gemini (messages, création de session, ✅/🔄).
+        ai_messages:
+            policy: sliding_window
+            limit: 20
+            interval: '1 minute'
+        ai_messages_daily:
+            policy: fixed_window
+            limit: 300
+            interval: '1 day'
+        # Création de comptes, par IP.
+        register:
+            policy: fixed_window
+            limit: 10
+            interval: '1 hour'
+
+when@test:
+    framework:
+        rate_limiter:
+            ai_messages:
+                policy: sliding_window
+                limit: 1000
+                interval: '1 minute'
+            ai_messages_daily:
+                policy: fixed_window
+                limit: 10000
+                interval: '1 day'
+            register:
+                policy: fixed_window
+                limit: 1000
+                interval: '1 hour'

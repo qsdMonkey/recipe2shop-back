@@ -1,0 +1,86 @@
+# Recipe2shop — API Symfony (dev, WSL)
+# Démarrer : docker compose up -d   →   http://localhost:8000/health
+
+x-php-env: &php-env
+  DATABASE_URL: "mysql://app:app@mysql:3306/recipe2shop?serverVersion=8.4&charset=utf8mb4"
+
+services:
+  php:
+    build:
+      context: ./docker/php
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    image: recipe2shop-php
+    environment:
+      <<: *php-env
+      RUN_MIGRATIONS: "1"
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./docker/php
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    image: recipe2shop-php
+    environment: *php-env
+    volumes:
+      - ./api:/app
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    # L'image FrankenPHP définit un healthcheck HTTP, sans objet pour le worker.
+    healthcheck:
+      disable: true
+    depends_on:
+      php:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    # Dev uniquement : sous Docker/WSL2, chaque fsync coûte ~100-200 ms, donc chaque commit aussi.
+    # Pas de binlog (pas de réplication) et journal InnoDB synchronisé chaque seconde au lieu de chaque commit
+    # (au pire ~1 s d'écritures perdues en cas de crash de la machine). En production : garder les valeurs par défaut.
+    command: ["--skip-log-bin", "--innodb-flush-log-at-trx-commit=2"]
+    environment:
+      MYSQL_DATABASE: recipe2shop
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:4
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:

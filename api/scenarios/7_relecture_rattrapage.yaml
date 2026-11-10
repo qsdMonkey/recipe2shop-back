@@ -1,0 +1,22 @@
+name: relecture_rattrapage
+description: "La relecture de fin de session rattrape ce que l'IA n'a pas retenu en direct (update_memory désactivé pendant la conversation)"
+memory:
+  foyer: "2 adultes"
+  frequence_courses: "toutes les semaines"
+  ustensile: [four, poêle]
+disable_tools: [update_memory]   # simule un oubli en direct : seule la relecture peut retenir
+steps:
+  - start: shopping
+  - say: "Je viens de m'acheter un airfryer, et ma poêle a rendu l'âme hier. Cette semaine 4 dîners. Propose-moi un plat avec du saumon."
+  - reject_pending: "non merci, on n'aime pas le poisson à la maison"
+  - say: "Et avec des crevettes, ça donnerait quoi ?"
+  - reject_pending: "non, pas de poisson ni de fruits de mer, on n'aime vraiment pas ça"
+  - say: "Ce soir on mange chez ma mère, donc pas de dîner à prévoir aujourd'hui."
+  - new_session: true
+checks:
+  memory_from_review:
+    ustensile: "airfryer"
+    naime_pas: "poisson"
+soft_checks:
+  memory_not_contains:
+    ustensile: "poele"

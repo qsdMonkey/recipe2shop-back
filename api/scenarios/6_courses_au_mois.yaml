@@ -1,0 +1,20 @@
+name: courses_au_mois
+description: "Courses au mois : période de 30 jours, priorité au batch cooking / congélation"
+memory:
+  foyer: "2 adultes"
+  regime: "aucun"
+  frequence_courses: "une fois par mois"
+  ustensile: [four, congélateur]
+steps:
+  - start: shopping
+    expect:
+      soft_text_matches: "mois|30|semaines"
+  - say: "C'est la grosse course du mois : il faut 20 dîners, on a un grand congélateur. Propose-moi une première recette."
+    expect:
+      tools: [set_meal_plan]
+  - accept_until_covered: {max: 3, meals: 8}
+checks:
+  period_days: 30
+  recipe_tool_errors_max: 1
+soft_checks:
+  recipes_tag_any: [congelable, batch_cooking]

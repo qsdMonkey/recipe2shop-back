@@ -1,0 +1,49 @@
+monolog:
+    channels: # To see all channels, run bin/console debug:autowiring logger
+        - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - recipe2shop # Événements métier (inscription, connexion, 429, appels Gemini…) : service monolog.logger.recipe2shop
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+            console:
+                type: console
+                process_psr_3_messages: false
+                channels: ["!event", "!doctrine", "!console"]
+
+when@test:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                channels: ["!event"]
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+
+# Production : JSON sur stderr (docker logs, rotation par Docker). Données sensibles masquées par
+# App\Logging\SensitiveDataProcessor (mots de passe, tokens, textes, valeurs de mémoire, prompts ; emails masqués).
+when@prod:
+    monolog:
+        handlers:
+            business:
+                type: stream
+                path: php://stderr
+                level: info
+                formatter: monolog.formatter.json
+                channels: ["recipe2shop"]
+            main:
+                type: stream
+                path: php://stderr
+                level: warning
+                formatter: monolog.formatter.json
+                channels: ["!recipe2shop", "!deprecation", "!event"]

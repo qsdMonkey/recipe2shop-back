@@ -1,0 +1,21 @@
+name: memoire_durable_vs_ponctuel
+description: "La mémoire retient l'airfryer (durable) mais pas « ce soir pas de viande » (ponctuel)"
+memory:
+  foyer: "2 adultes"
+  frequence_courses: "toutes les semaines"
+  ustensile: [four]
+steps:
+  - start: shopping
+  - say: "Ce soir pas de viande, on a mangé un gros burger ce midi."
+    expect:
+      tools_not: [update_memory]
+  - say: "Au fait, je viens d'acheter un airfryer !"
+    expect:
+      tools: [update_memory]
+checks:
+  memory_contains:
+    ustensile: "airfryer"
+  memory_not_contains:
+    naime_pas: "viande"
+    regime: "vegetarien"
+    contrainte: "viande"

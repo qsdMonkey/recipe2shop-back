@@ -1,0 +1,248 @@
+{
+  "id": 9999,
+  "type": "shopping",
+  "status": "active",
+  "started_at": "2026-11-02T09:00:00+00:00",
+  "closed_at": null,
+  "period_days": 7,
+  "last_message_at": "2026-11-04T18:10:00+00:00",
+  "progress": { "meals_planned": 8, "meals_covered": 5 },
+  "read_only": false,
+  "messages": [
+    {
+      "id": 1,
+      "role": "system",
+      "created_at": "2026-11-02T09:00:00+00:00",
+      "blocks": [
+        { "type": "text", "text": "Depuis ta dernière session, j'ai retenu :" },
+        { "type": "memory", "event": { "id": 301, "action": "add", "category": "naime_pas", "value": "poisson", "old_value": null, "origin": "batch", "undone": false } },
+        { "type": "memory", "event": { "id": 302, "action": "update", "category": "frequence_courses", "value": "toutes les 2 semaines", "old_value": "toutes les semaines", "origin": "batch", "undone": true } }
+      ]
+    },
+    {
+      "id": 2,
+      "role": "assistant",
+      "created_at": "2026-11-02T09:00:02+00:00",
+      "blocks": [
+        { "type": "text", "text": "Salut ! On prépare les courses de la semaine ?\nQu'est-ce que tu as dans le frigo et les placards ? Et combien de repas veux-tu prévoir (midi, soir, gamelles) ?" }
+      ]
+    },
+    {
+      "id": 3,
+      "role": "user",
+      "created_at": "2026-11-02T09:01:10+00:00",
+      "blocks": [
+        { "type": "text", "text": "J'ai des haricots rouges, du riz et des courgettes. 6 dîners et 2 gamelles. Et je viens d'acheter un airfryer !" }
+      ]
+    },
+    {
+      "id": 4,
+      "role": "assistant",
+      "created_at": "2026-11-02T09:01:18+00:00",
+      "blocks": [
+        { "type": "memory", "event": { "id": 303, "action": "add", "category": "ustensile", "value": "airfryer", "old_value": null, "origin": "live", "undone": false } },
+        { "type": "text", "text": "Super, je note l'airfryer. Pour commencer, un gros plat qui couvre 3 repas et utilise tes haricots et ton riz :" },
+        {
+          "type": "recipe",
+          "status": "accepted",
+          "suggested_day": 1,
+          "cooked": true,
+          "warnings": [],
+          "recipe": {
+            "id": 45,
+            "title": "Chili sin carne",
+            "description": "Gros plat mijoté, parfait pour les gamelles.",
+            "servings": 6,
+            "meals_covered": 3,
+            "meal_tags": ["batch_cooking", "gamelle", "one_pot", "congelable"],
+            "prep_time_min": 20,
+            "cook_time_min": 40,
+            "difficulty": "easy",
+            "uses_inventory": ["haricots rouges", "riz"],
+            "ingredients": [
+              { "name": "haricots rouges", "quantity": 800, "unit": "g", "category": "epicerie", "optional": false },
+              { "name": "riz", "quantity": 400, "unit": "g", "category": "epicerie", "optional": false },
+              { "name": "oignon", "quantity": 2, "unit": "piece", "category": "fruits_legumes", "optional": false },
+              { "name": "ail", "quantity": 2, "unit": "gousse", "category": "fruits_legumes", "optional": false },
+              { "name": "tomates concassées", "quantity": 2, "unit": "boite", "category": "epicerie", "optional": false },
+              { "name": "cumin", "quantity": 1, "unit": "cac", "category": "epicerie", "optional": false },
+              { "name": "huile d'olive", "quantity": 2, "unit": "cas", "category": "epicerie", "optional": false },
+              { "name": "crème fraîche", "quantity": 20, "unit": "cl", "category": "cremerie", "optional": true },
+              { "name": "sel", "quantity": null, "unit": null, "category": "epicerie", "optional": false }
+            ],
+            "steps": [
+              "Émincer les oignons et l'ail.",
+              "Les faire revenir 5 min dans l'huile avec le cumin.",
+              "Ajouter les tomates et les haricots égouttés, laisser mijoter 30 min.",
+              "Cuire le riz pendant ce temps.",
+              "Servir avec une cuillère de crème si tu veux."
+            ],
+            "equipment": ["cocotte"],
+            "storage_tip": "Se garde 3 jours au frigo, se congèle."
+          }
+        },
+        { "type": "text", "text": "Ça te va ?" }
+      ]
+    },
+    {
+      "id": 5,
+      "role": "user",
+      "created_at": "2026-11-02T09:02:00+00:00",
+      "blocks": [
+        { "type": "action", "action": "accept_recipe", "recipe_id": 45, "recipe_title": "Chili sin carne", "comment": null }
+      ]
+    },
+    {
+      "id": 6,
+      "role": "assistant",
+      "created_at": "2026-11-02T09:02:09+00:00",
+      "blocks": [
+        { "type": "text", "text": "Parfait ! Pour profiter de ton airfryer :" },
+        {
+          "type": "recipe",
+          "status": "rejected",
+          "suggested_day": 2,
+          "cooked": false,
+          "warnings": [],
+          "recipe": {
+            "id": 46,
+            "title": "Saumon et courgettes à l'airfryer",
+            "description": "Rapide, 15 minutes chrono.",
+            "servings": 2,
+            "meals_covered": 1,
+            "meal_tags": ["rapide"],
+            "prep_time_min": 5,
+            "cook_time_min": 12,
+            "difficulty": "easy",
+            "uses_inventory": ["courgettes"],
+            "ingredients": [
+              { "name": "pavé de saumon", "quantity": 2, "unit": "piece", "category": "boucherie_poissonnerie", "optional": false },
+              { "name": "courgette", "quantity": 2, "unit": "piece", "category": "fruits_legumes", "optional": false },
+              { "name": "citron", "quantity": 0.5, "unit": "piece", "category": "fruits_legumes", "optional": true }
+            ],
+            "steps": ["Couper les courgettes en rondelles.", "Cuire saumon et courgettes 12 min à 200 °C."],
+            "equipment": ["airfryer"],
+            "storage_tip": "À manger le jour même."
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "role": "user",
+      "created_at": "2026-11-02T09:02:40+00:00",
+      "blocks": [
+        { "type": "action", "action": "reject_recipe", "recipe_id": 46, "recipe_title": "Saumon et courgettes à l'airfryer", "comment": "pas de poisson" }
+      ]
+    },
+    {
+      "id": 8,
+      "role": "assistant",
+      "created_at": "2026-11-02T09:02:50+00:00",
+      "blocks": [
+        { "type": "memory", "event": { "id": 304, "action": "delete", "category": "aime", "value": null, "old_value": "saumon", "origin": "live", "undone": false } },
+        { "type": "text", "text": "Compris, pas de poisson. Une alternative sans four :" },
+        {
+          "type": "recipe",
+          "status": "proposed",
+          "suggested_day": 2,
+          "cooked": false,
+          "warnings": ["Ustensile absent de ton profil : wok"],
+          "recipe": {
+            "id": 47,
+            "title": "Wok de poulet aux courgettes",
+            "description": "Un sauté rapide pour les soirs chargés.",
+            "servings": 2,
+            "meals_covered": 2,
+            "meal_tags": ["rapide", "gamelle"],
+            "prep_time_min": 10,
+            "cook_time_min": 10,
+            "difficulty": "medium",
+            "uses_inventory": ["courgettes"],
+            "ingredients": [
+              { "name": "blanc de poulet", "quantity": 300, "unit": "g", "category": "boucherie_poissonnerie", "optional": false },
+              { "name": "courgette", "quantity": 1, "unit": "piece", "category": "fruits_legumes", "optional": false },
+              { "name": "sauce soja", "quantity": 3, "unit": "cas", "category": "epicerie", "optional": false },
+              { "name": "coriandre", "quantity": 1, "unit": "botte", "category": "fruits_legumes", "optional": true }
+            ],
+            "steps": ["Couper le poulet en lanières.", "Saisir au wok 5 min.", "Ajouter la courgette et la sauce soja, cuire 5 min."],
+            "equipment": ["wok"],
+            "storage_tip": "Se garde 2 jours au frigo."
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "role": "assistant",
+      "created_at": "2026-11-02T09:06:00+00:00",
+      "blocks": [
+        { "type": "text", "text": "Voilà ta liste de courses, sans ce que tu as déjà :" },
+        { "type": "shopping_list", "list": { "id": 12, "type": "main", "name": "Courses de la semaine", "item_count": 34, "checked_count": 3 } }
+      ]
+    },
+    {
+      "id": 10,
+      "role": "user",
+      "created_at": "2026-11-04T18:09:30+00:00",
+      "blocks": [
+        { "type": "text", "text": "Il me manque du lait, et samedi on fait un apéro pour 10." }
+      ]
+    },
+    {
+      "id": 11,
+      "role": "assistant",
+      "created_at": "2026-11-04T18:09:40+00:00",
+      "blocks": [
+        { "type": "text", "text": "Je t'ai fait une petite liste d'appoint et une liste pour l'apéro :" },
+        { "type": "shopping_list", "list": { "id": 13, "type": "top_up", "name": "Appoint du 4/11", "item_count": 1, "checked_count": 0 } },
+        { "type": "shopping_list", "list": { "id": 14, "type": "event", "name": "Apéro samedi (10 pers.)", "item_count": 12, "checked_count": 0 } }
+      ]
+    },
+    {
+      "id": 12,
+      "role": "user",
+      "created_at": "2026-11-04T18:09:55+00:00",
+      "blocks": [
+        { "type": "text", "text": "Au fait, je refais mes courses ce week-end pour la semaine prochaine." }
+      ]
+    },
+    {
+      "id": 13,
+      "role": "assistant",
+      "created_at": "2026-11-04T18:10:00+00:00",
+      "blocks": [
+        { "type": "text", "text": "Pour une nouvelle grosse course, le mieux est de démarrer une nouvelle session : je garde en mémoire ce que j'ai appris." },
+        { "type": "new_session", "reason": "Nouvelle grosse course prévue ce week-end." }
+      ]
+    },
+    {
+      "id": 14,
+      "role": "assistant",
+      "created_at": "2026-11-04T18:10:01+00:00",
+      "blocks": [
+        { "type": "text", "text": "(Exemple de bloc d'onboarding, qui n'apparaît normalement que dans une session de type onboarding :) J'ai tout ce qu'il me faut pour commencer !" },
+        { "type": "finish_onboarding" }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "status": "accepted", "suggested_day": 1, "cooked": true, "warnings": [],
+      "recipe": { "id": 45, "title": "Chili sin carne", "description": "Gros plat mijoté, parfait pour les gamelles.", "servings": 6, "meals_covered": 3, "meal_tags": ["batch_cooking", "gamelle", "one_pot", "congelable"], "prep_time_min": 20, "cook_time_min": 40, "difficulty": "easy", "uses_inventory": ["haricots rouges", "riz"], "ingredients": [{ "name": "haricots rouges", "quantity": 800, "unit": "g", "category": "epicerie", "optional": false }, { "name": "oignon", "quantity": 2, "unit": "piece", "category": "fruits_legumes", "optional": false }], "steps": ["Émincer les oignons.", "Mijoter 30 min."], "equipment": ["cocotte"], "storage_tip": "Se garde 3 jours au frigo, se congèle." }
+    },
+    {
+      "status": "rejected", "suggested_day": 2, "cooked": false, "warnings": [],
+      "recipe": { "id": 46, "title": "Saumon et courgettes à l'airfryer", "description": "Rapide, 15 minutes chrono.", "servings": 2, "meals_covered": 1, "meal_tags": ["rapide"], "prep_time_min": 5, "cook_time_min": 12, "difficulty": "easy", "uses_inventory": ["courgettes"], "ingredients": [{ "name": "pavé de saumon", "quantity": 2, "unit": "piece", "category": "boucherie_poissonnerie", "optional": false }], "steps": ["Cuire 12 min à 200 °C."], "equipment": ["airfryer"], "storage_tip": "À manger le jour même." }
+    },
+    {
+      "status": "proposed", "suggested_day": 2, "cooked": false, "warnings": ["Ustensile absent de ton profil : wok"],
+      "recipe": { "id": 47, "title": "Wok de poulet aux courgettes", "description": "Un sauté rapide pour les soirs chargés.", "servings": 2, "meals_covered": 2, "meal_tags": ["rapide", "gamelle"], "prep_time_min": 10, "cook_time_min": 10, "difficulty": "medium", "uses_inventory": ["courgettes"], "ingredients": [{ "name": "blanc de poulet", "quantity": 300, "unit": "g", "category": "boucherie_poissonnerie", "optional": false }], "steps": ["Saisir au wok 5 min."], "equipment": ["wok"], "storage_tip": "Se garde 2 jours au frigo." }
+    }
+  ],
+  "shopping_lists": [
+    { "id": 12, "type": "main", "name": "Courses de la semaine", "item_count": 34, "checked_count": 3 },
+    { "id": 13, "type": "top_up", "name": "Appoint du 4/11", "item_count": 1, "checked_count": 0 },
+    { "id": 14, "type": "event", "name": "Apéro samedi (10 pers.)", "item_count": 12, "checked_count": 0 }
+  ]
+}

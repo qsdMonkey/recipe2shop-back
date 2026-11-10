@@ -1,0 +1,20 @@
+# Caddy en HTTP seul, derrière le reverse proxy HTTPS (qui gère TLS, les en-têtes X-Forwarded-* et les timeouts).
+{
+	admin off
+	auto_https off
+	frankenphp
+}
+
+:8080 {
+	root * /app/public
+	encode zstd gzip
+
+	# Les corps de requête de l'API sont petits (JSON) : 1 Mo max.
+	request_body {
+		max_size 1MB
+	}
+
+	header -Server
+
+	php_server
+}

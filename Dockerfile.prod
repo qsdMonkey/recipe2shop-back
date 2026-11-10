@@ -1,0 +1,45 @@
+# Image de production de l'API Recipe2shop (FrankenPHP = Caddy + PHP 8.4), HTTP seul : le HTTPS est assuré par
+# le reverse proxy de Pierre (recipe2shop-api.voglimacci.fr → hôte:8020).
+# Build : docker compose --env-file .env.local -f compose.prod.yaml build
+FROM composer/composer:2-bin AS composer
+
+FROM dunglas/frankenphp:1-php8.4
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && install-php-extensions pdo_mysql intl opcache zip apcu
+
+COPY --from=composer /composer /usr/bin/composer
+
+ENV APP_ENV=prod \
+    APP_DEBUG=0 \
+    # Port interne non privilégié (le conteneur tourne en non-root) ; publié sur 8020 par compose.prod.yaml.
+    SERVER_NAME=":8080" \
+    COMPOSER_HOME=/tmp/composer \
+    COMPOSER_ALLOW_SUPERUSER=1
+
+COPY docker/prod/php.ini $PHP_INI_DIR/conf.d/zz-recipe2shop.ini
+COPY docker/prod/Caddyfile /etc/frankenphp/Caddyfile
+COPY docker/prod/entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
+WORKDIR /app
+
+# Dépendances d'abord (cache des couches Docker), sans les paquets de dev.
+COPY api/composer.json api/composer.lock api/symfony.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-progress --no-interaction
+
+COPY api/ ./
+RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction \
+    && rm -rf tests .env.local .env.*.local config/jwt/*.pem var \
+    && mkdir -p var config/jwt \
+    && groupadd -g 1000 app && useradd -u 1000 -g 1000 -M -d /app app \
+    && chown -R app:app var /data/caddy /config/caddy
+
+USER app
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 CMD curl -fsS http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["docker-entrypoint"]
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]

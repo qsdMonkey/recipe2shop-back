@@ -1,0 +1,11 @@
+# Les .gitignore spécifiques sont dans api/.
+.idea/
+.vscode/
+*.swp
+
+# Déploiement : archive construite, et fichiers propres au serveur (secrets, clés, sauvegardes) — jamais commités.
+dist/
+.env.local
+.gemini_api_key
+jwt/
+backups/

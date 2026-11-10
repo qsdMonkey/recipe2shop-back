@@ -1,0 +1,221 @@
+# Référentiel d'ingrédients (étape 6). Séparateur « ; ». Les alias sont séparés par « | ».
+# name;category;default_unit;shelf_life_days;avg_weight_per_piece_g;is_basic;aliases
+# shelf_life_days : durée de conservation indicative (frigo pour le frais, placard pour l'épicerie).
+# Fruits et légumes
+ail;fruits_legumes;gousse;30;5;0;gousse d'ail|tete d'ail
+oignon;fruits_legumes;piece;30;150;0;oignon jaune|oignons
+oignon rouge;fruits_legumes;piece;30;150;0;
+échalote;fruits_legumes;piece;30;30;0;echalote
+oignon nouveau;fruits_legumes;botte;5;;0;cebette|ciboule
+poireau;fruits_legumes;piece;10;250;0;
+carotte;fruits_legumes;piece;21;100;0;
+pommes de terre;fruits_legumes;g;30;150;0;patate|pommes de terre grenaille|pomme de terre grenaille|pomme de terre
+patate douce;fruits_legumes;piece;21;300;0;
+courgette;fruits_legumes;piece;7;250;0;
+aubergine;fruits_legumes;piece;7;300;0;
+poivron;fruits_legumes;piece;10;180;0;poivron rouge|poivron vert|poivron jaune
+tomate;fruits_legumes;piece;7;120;0;
+tomates cerises;fruits_legumes;g;7;;0;tomates cerises|tomate cerise
+concombre;fruits_legumes;piece;7;350;0;
+salade;fruits_legumes;piece;4;300;0;laitue|salade verte|batavia|feuille de chene
+roquette;fruits_legumes;g;3;;0;
+mâche;fruits_legumes;g;3;;0;mache
+épinard frais;fruits_legumes;g;3;;0;pousse d'epinard|jeunes pousses d'epinard|epinard frais
+brocoli;fruits_legumes;piece;5;400;0;brocolis
+chou-fleur;fruits_legumes;piece;7;800;0;chou fleur|chou-fleur
+chou;fruits_legumes;piece;14;1000;0;chou vert|chou blanc
+chou rouge;fruits_legumes;piece;14;1000;0;
+haricots verts;fruits_legumes;g;4;;0;haricots verts frais|haricot vert
+petits pois frais;fruits_legumes;g;3;;0;petit pois frais
+champignons de Paris;fruits_legumes;g;4;;0;champignon|champignons|champignon de paris
+avocat;fruits_legumes;piece;5;200;0;
+citron;fruits_legumes;piece;21;120;0;citron jaune
+citron vert;fruits_legumes;piece;21;70;0;
+orange;fruits_legumes;piece;14;200;0;
+pomme;fruits_legumes;piece;21;180;0;
+poire;fruits_legumes;piece;7;180;0;
+banane;fruits_legumes;piece;5;120;0;
+fraises;fruits_legumes;g;3;;0;fraise
+framboises;fruits_legumes;g;2;;0;framboise
+myrtilles;fruits_legumes;g;5;;0;myrtille
+raisin;fruits_legumes;g;7;;0;
+kiwi;fruits_legumes;piece;14;80;0;
+mangue;fruits_legumes;piece;7;400;0;
+ananas;fruits_legumes;piece;7;1200;0;
+melon;fruits_legumes;piece;5;1000;0;
+pêche;fruits_legumes;piece;4;150;0;peche
+abricot;fruits_legumes;piece;4;50;0;
+butternut;fruits_legumes;piece;30;1200;0;courge butternut|courge
+potiron;fruits_legumes;g;30;;0;potimarron
+navet;fruits_legumes;piece;14;150;0;
+betterave cuite;fruits_legumes;piece;7;150;0;betterave
+céleri;fruits_legumes;piece;14;;0;celeri branche|branche de celeri|celeri
+fenouil;fruits_legumes;piece;7;300;0;
+radis;fruits_legumes;botte;5;;0;radis
+asperges;fruits_legumes;botte;3;;0;asperge
+gingembre;fruits_legumes;g;21;;0;gingembre frais
+persil;fruits_legumes;botte;5;;0;persil plat|persil frais
+coriandre;fruits_legumes;botte;5;;0;coriandre fraiche
+basilic;fruits_legumes;botte;5;;0;basilic frais
+ciboulette;fruits_legumes;botte;5;;0;
+menthe;fruits_legumes;botte;5;;0;menthe fraiche
+aneth;fruits_legumes;botte;5;;0;
+thym frais;fruits_legumes;botte;10;;0;
+romarin frais;fruits_legumes;botte;10;;0;
+# Boulangerie
+pain;boulangerie;piece;2;250;0;baguette|pain frais
+pain de mie;boulangerie;piece;7;500;0;
+pain burger;boulangerie;piece;5;80;0;pain a burger|pain hamburger|bun
+pain complet;boulangerie;piece;4;500;0;
+pain pita;boulangerie;piece;7;70;0;pita
+tortilla de blé;boulangerie;piece;30;40;0;tortilla|wrap|tortillas|tortilla de ble
+pâte à pizza;cremerie;piece;14;400;0;pate a pizza
+pâte feuilletée;cremerie;piece;14;230;0;pate feuilletee
+pâte brisée;cremerie;piece;14;230;0;pate brisee
+# Boucherie / poissonnerie
+poulet;boucherie_poissonnerie;g;2;;0;blanc de poulet|filet de poulet|escalope de poulet|poulet emince|aiguillette de poulet|poitrine de poulet
+cuisse de poulet;boucherie_poissonnerie;piece;2;250;0;haut de cuisse de poulet|pilon de poulet
+poulet entier;boucherie_poissonnerie;piece;2;1500;0;
+dinde;boucherie_poissonnerie;g;2;;0;escalope de dinde|filet de dinde
+bœuf haché;boucherie_poissonnerie;g;1;;0;viande hachee|steak hache|viande hachee de boeuf|haché de boeuf|boeuf hache
+bœuf;boucherie_poissonnerie;g;3;;0;boeuf a bourguignon|boeuf a braiser|paleron|steak|bavette|rumsteck|boeuf
+veau;boucherie_poissonnerie;g;2;;0;escalope de veau
+porc;boucherie_poissonnerie;g;3;;0;filet mignon|echine de porc|cote de porc|roti de porc
+saucisse;boucherie_poissonnerie;piece;5;100;0;saucisse de toulouse|chipolata|merguez
+lardons;boucherie_poissonnerie;g;10;;0;lardons|lardons fumes|lardon fume|lardon
+jambon blanc;boucherie_poissonnerie;tranche;5;45;0;jambon|jambon cuit
+jambon cru;boucherie_poissonnerie;tranche;14;20;0;
+chorizo;boucherie_poissonnerie;g;30;;0;
+agneau;boucherie_poissonnerie;g;3;;0;gigot|epaule d'agneau
+saumon;boucherie_poissonnerie;g;2;;0;pave de saumon|filet de saumon
+saumon fumé;boucherie_poissonnerie;tranche;10;25;0;saumon fume
+cabillaud;boucherie_poissonnerie;g;2;;0;dos de cabillaud|filet de cabillaud|poisson blanc|colin|lieu|merlu
+thon frais;boucherie_poissonnerie;g;2;;0;
+crevettes;boucherie_poissonnerie;g;2;;0;crevettes|crevette decortiquee|gambas|crevette
+moules;boucherie_poissonnerie;g;1;;0;moules|moule
+# Crèmerie (frais)
+œuf;cremerie;piece;28;60;0;oeufs|oeuf frais|oeuf
+lait;cremerie;ml;7;;0;lait demi-ecreme|lait entier
+beurre;cremerie;g;30;;0;beurre doux|beurre demi-sel
+crème fraîche;cremerie;cl;10;;0;creme|creme fraiche epaisse|creme liquide|creme fleurette|creme entiere|creme fraiche liquide|creme fraiche
+yaourt nature;cremerie;piece;14;125;0;yaourt|yaourts
+yaourt grec;cremerie;g;14;;0;
+fromage blanc;cremerie;g;10;;0;
+lait de coco;epicerie;ml;365;;0;creme de coco
+emmental râpé;cremerie;g;21;;0;fromage rape|gruyere rape|emmental|gruyere|emmental rape
+parmesan;cremerie;g;30;;0;parmesan rape|parmigiano
+mozzarella;cremerie;piece;10;125;0;boule de mozzarella|mozzarella di bufala
+cheddar;cremerie;g;30;;0;cheddar rape
+feta;cremerie;g;14;;0;
+chèvre;cremerie;g;14;;0;fromage de chevre|buche de chevre|chevre
+comté;cremerie;g;30;;0;comte
+raclette;cremerie;g;21;;0;fromage a raclette
+ricotta;cremerie;g;7;;0;
+mascarpone;cremerie;g;10;;0;
+fromage frais;cremerie;g;14;;0;fromage a tartiner|philadelphia|saint moret
+tofu;cremerie;g;14;;0;tofu ferme|tofu soyeux
+gnocchis;cremerie;g;21;;0;gnocchis|gnocchi
+pâtes fraîches;cremerie;g;10;;0;tagliatelle fraiche|tagliatelles fraiches|raviolis frais|ravioli|pate fraiche
+houmous;cremerie;g;7;;0;
+# Épicerie salée
+riz;epicerie;g;365;;0;riz basmati|riz thai|riz long|riz rond|riz arborio|riz a risotto|riz complet
+pâtes;epicerie;g;365;;0;pates|spaghetti|penne|coquillette|coquillettes|fusilli|tagliatelle|tagliatelles|macaroni|farfalle|linguine|pate penne|pates seches|pate
+nouilles;epicerie;g;365;;0;nouilles|nouilles chinoises|nouille de riz|nouilles de riz|nouilles udon|vermicelle de riz|nouille
+semoule;epicerie;g;365;;0;couscous|semoule de couscous
+quinoa;epicerie;g;365;;0;
+boulgour;epicerie;g;365;;0;
+lentilles;epicerie;g;365;;0;lentilles|lentille verte|lentilles vertes|lentille corail|lentilles corail|lentille
+pois chiches;epicerie;g;730;;0;pois chiches|pois chiches en boite|pois chiche
+haricots rouges;epicerie;g;730;;0;haricots rouges|haricots rouges en boite|haricot rouge
+haricots blancs;epicerie;g;730;;0;haricots blancs|flageolet|flageolets|haricot blanc
+maïs;epicerie;g;730;;0;mais en boite|mais doux|mais
+tomates concassées;epicerie;boite;730;400;0;tomates concassees|tomate pelee|tomates pelees|pulpe de tomate|tomate en boite|tomate concassee
+coulis de tomate;epicerie;ml;730;;0;passata|sauce tomate|coulis
+concentré de tomate;epicerie;g;730;;0;double concentre de tomate|concentre de tomate
+thon en boîte;epicerie;g;1095;;0;thon|thon au naturel|miette de thon|thon en boite
+sardine en boîte;epicerie;boite;1095;;0;sardines|sardine|sardine en boite
+olives;epicerie;g;365;;0;olives|olive noire|olive verte|olive
+cornichons;epicerie;g;365;;0;cornichons|cornichon
+câpres;epicerie;g;365;;0;capres|capre
+bouillon;epicerie;piece;730;10;0;cube de bouillon|bouillon de legumes|bouillon de volaille|bouillon cube|fond de volaille
+sauce soja;epicerie;ml;365;;0;sauce soja salee|tamari
+moutarde;epicerie;g;365;;0;moutarde de dijon|moutarde a l'ancienne
+mayonnaise;epicerie;g;180;;0;mayo
+ketchup;epicerie;g;365;;0;
+pesto;epicerie;g;30;;0;pesto vert|pesto rosso
+curry;epicerie;cac;730;;0;curry en poudre|poudre de curry
+pate de curry;epicerie;g;180;;0;pate de curry rouge|pate de curry vert
+cumin;epicerie;cac;730;;0;cumin en poudre
+paprika;epicerie;cac;730;;0;paprika fume
+curcuma;epicerie;cac;730;;0;
+cannelle;epicerie;cac;730;;0;cannelle en poudre
+piment;epicerie;cac;730;;0;piment d'espelette|piment en poudre|piment de cayenne|flocons de piment
+herbes de provence;epicerie;cac;730;;0;herbes de provence sechees
+origan;epicerie;cac;730;;0;origan seche
+thym séché;epicerie;cac;730;;0;thym|thym seche
+laurier;epicerie;piece;730;;0;feuille de laurier
+noix de muscade;epicerie;pincee;730;;0;muscade
+ras el hanout;epicerie;cac;730;;0;
+gingembre en poudre;epicerie;cac;730;;0;
+graines de sésame;epicerie;g;365;;0;sesame|graines de sesame
+noix de cajou;epicerie;g;365;;0;cajou
+amandes;epicerie;g;365;;0;amandes|amande effilee|poudre d'amande|amande
+noix;epicerie;g;365;;0;cerneaux de noix
+pignons de pin;epicerie;g;365;;0;pignons|pignon de pin
+cacahuète;epicerie;g;365;;0;arachide|cacahuetes|cacahuete
+beurre de cacahuète;epicerie;g;365;;0;beurre de cacahuete
+chapelure;epicerie;g;365;;0;panko
+fécule de maïs;epicerie;g;730;;0;maizena|fecule de mais
+levure chimique;epicerie;sachet;730;11;0;levure
+vinaigre balsamique;epicerie;ml;730;;0;balsamique|creme de balsamique
+# Épicerie sucrée
+sucre;epicerie_sucree;g;730;;0;sucre en poudre|sucre blanc|sucre roux|cassonade
+sucre vanillé;epicerie_sucree;sachet;730;7;0;sucre vanilline|sucre vanille
+farine;epicerie_sucree;g;365;;0;farine de ble|farine t45|farine t55
+chocolat noir;epicerie_sucree;g;365;;0;chocolat|chocolat patissier|pepites de chocolat
+cacao;epicerie_sucree;g;365;;0;cacao en poudre
+miel;epicerie_sucree;g;730;;0;
+confiture;epicerie_sucree;g;365;;0;
+sirop d'érable;epicerie_sucree;ml;365;;0;sirop d'erable
+flocons d'avoine;epicerie_sucree;g;365;;0;avoine
+céréales;epicerie_sucree;g;180;;0;cereales
+biscuits;epicerie_sucree;g;180;;0;biscuits|petit beurre|speculoos|biscuit
+compote;epicerie_sucree;piece;365;100;0;compotes|gourde de compote
+raisins secs;epicerie_sucree;g;365;;0;raisins secs|raisin sec
+vanille;epicerie_sucree;piece;730;;0;gousse de vanille|extrait de vanille
+# Surgelés
+petits pois surgelés;surgeles;g;180;;0;petits pois|petit pois|petits pois surgeles|petit pois surgele
+épinards surgelés;surgeles;g;180;;0;epinards|epinard|epinards hachés|epinards surgeles|epinard surgele
+haricots verts surgelés;surgeles;g;180;;0;haricots verts surgeles|haricot vert surgele
+légumes surgelés;surgeles;g;180;;0;poelee de legumes|melange de legumes surgeles|legumes pour wok|legumes surgeles
+frites surgelées;surgeles;g;180;;0;frites|frites surgelees
+poisson pané;surgeles;piece;180;50;0;poissons panes|poisson pane
+glace;surgeles;ml;180;;0;creme glacee
+# Boissons
+eau gazeuse;boissons;l;365;;0;
+jus d'orange;boissons;l;10;;0;
+vin blanc;boissons;ml;365;;0;
+vin rouge;boissons;ml;365;;0;
+bière;boissons;piece;180;;0;bieres|biere
+soda;boissons;l;180;;0;coca
+café;boissons;g;180;;0;cafe
+thé;boissons;piece;730;;0;sachet de the|the
+# Hygiène / entretien
+papier toilette;hygiene_entretien;piece;3650;;0;pq|papier wc
+essuie-tout;hygiene_entretien;piece;3650;;0;sopalin
+liquide vaisselle;hygiene_entretien;piece;3650;;0;
+lessive;hygiene_entretien;piece;3650;;0;
+éponge;hygiene_entretien;piece;3650;;0;eponges|eponge
+sac poubelle;hygiene_entretien;piece;3650;;0;sacs poubelle
+dentifrice;hygiene_entretien;piece;3650;;0;
+gel douche;hygiene_entretien;piece;3650;;0;savon
+papier aluminium;hygiene_entretien;piece;3650;;0;aluminium
+film alimentaire;hygiene_entretien;piece;3650;;0;
+# Produits de base (« à vérifier dans tes placards »)
+sel;epicerie;pincee;3650;;1;sel fin|gros sel|fleur de sel
+poivre;epicerie;pincee;3650;;1;poivre noir|poivre moulu
+huile d'olive;epicerie;cas;730;;1;huile
+huile neutre;epicerie;cas;730;;1;huile de tournesol|huile vegetale|huile de colza
+huile de sesame;epicerie;cas;365;;1;
+vinaigre;epicerie;cas;730;;1;vinaigre de vin|vinaigre de cidre|vinaigre de riz
+eau;boissons;ml;3650;;1;eau froide|eau chaude|eau bouillante

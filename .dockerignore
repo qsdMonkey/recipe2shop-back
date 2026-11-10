@@ -1,0 +1,17 @@
+# Contexte de build de Dockerfile.prod : uniquement le code, jamais de secret.
+.git
+dist
+backups
+jwt
+.env.local
+.gemini_api_key
+api/vendor
+api/var
+api/.env.local
+api/.env.*.local
+api/config/jwt/*.pem
+api/tests
+api/scenarios/*.md
+api/.phpunit.cache
+docker/php
+docker/mysql

@@ -1,0 +1,12 @@
+gesdinet_jwt_refresh_token:
+    refresh_token_class: App\Entity\RefreshToken
+    # 30 jours : l'utilisateur reste connecté sur son téléphone tant qu'il ouvre l'app au moins une fois par mois.
+    ttl: 2592000
+    # Rotation : chaque refresh token ne sert qu'une fois, /auth/refresh en renvoie un nouveau.
+    single_use: true
+    token_parameter_name: refresh_token
+    return_expiration: true
+    # Seul le hash est stocké en base : une copie de la base ne permet pas de se connecter.
+    hash_tokens:
+        enabled: true
+        accept_stored_in_the_clear: false

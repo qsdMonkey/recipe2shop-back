@@ -1,0 +1,89 @@
+# Recipe2shop — API en production (serveur de Pierre).
+# Toujours lancé avec les secrets de .env.local (jamais commité) :
+#   docker compose --env-file .env.local -f compose.prod.yaml -p recipe2shop-api up -d
+# Voir README-DEPLOY.md (install.sh, deploy.sh, backup.sh).
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-app-env: &app-env
+  APP_ENV: prod
+  APP_DEBUG: "0"
+  APP_SECRET: ${APP_SECRET:?APP_SECRET manquant dans .env.local}
+  DATABASE_URL: "mysql://recipe2shop:${MYSQL_PASSWORD:?MYSQL_PASSWORD manquant}@mysql:3306/recipe2shop?serverVersion=8.0.33&charset=utf8mb4"
+  MESSENGER_TRANSPORT_DSN: "doctrine://default?auto_setup=0"
+  JWT_SECRET_KEY: "%kernel.project_dir%/config/jwt/private.pem"
+  JWT_PUBLIC_KEY: "%kernel.project_dir%/config/jwt/public.pem"
+  JWT_PASSPHRASE: ${JWT_PASSPHRASE:?JWT_PASSPHRASE manquant}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY manquant}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+  GEMINI_MAX_OUTPUT_TOKENS: ${GEMINI_MAX_OUTPUT_TOKENS:-8192}
+  GEMINI_THINKING_LEVEL_CHAT: ${GEMINI_THINKING_LEVEL_CHAT:-low}
+  GEMINI_THINKING_LEVEL_PROPOSE_RECIPE: ${GEMINI_THINKING_LEVEL_PROPOSE_RECIPE:-low}
+  GEMINI_THINKING_LEVEL_MEMORY_REVIEW: ${GEMINI_THINKING_LEVEL_MEMORY_REVIEW:-medium}
+  GEMINI_PRICE_INPUT_PER_MTOK: ${GEMINI_PRICE_INPUT_PER_MTOK:-0.75}
+  GEMINI_PRICE_OUTPUT_PER_MTOK: ${GEMINI_PRICE_OUTPUT_PER_MTOK:-3.75}
+  GEMINI_DAILY_BUDGET_USD: ${GEMINI_DAILY_BUDGET_USD:-2}
+  # Reverse proxies de confiance (X-Forwarded-*) : plages privées.
+  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+  # CORS fermé : l'app native n'envoie pas d'en-tête Origin ; aucun site web n'est autorisé.
+  CORS_ALLOW_ORIGIN: "^$$"
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: recipe2shop-api:latest
+    environment: *app-env
+    ports:
+      - "8020:8080"
+    volumes:
+      - ./jwt:/app/config/jwt:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
+
+  worker:
+    image: recipe2shop-api:latest
+    environment: *app-env
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "--quiet"]
+    volumes:
+      - ./jwt:/app/config/jwt:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    logging: *logging
+
+  mysql:
+    # Épinglé sur 8.0.33 : le CPU du serveur (« Common KVM processor ») n'a pas x86-64-v2, exigé par MySQL ≥ 8.0.34
+    # (même contrainte que Steplin).
+    image: mysql:8.0.33
+    # Réglages par défaut (binlog, synchronisation à chaque commit) : durabilité maximale en production.
+    environment:
+      MYSQL_DATABASE: recipe2shop
+      MYSQL_USER: recipe2shop
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD manquant}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD manquant}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Port NON publié : MySQL n'est joignable que par les conteneurs de ce projet.
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  mysql_data:

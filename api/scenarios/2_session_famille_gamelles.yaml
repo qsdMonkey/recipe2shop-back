@@ -1,0 +1,32 @@
+name: session_famille_gamelles
+description: "Session complète d'une famille de 4 (allergie arachide, gamelles) : frigo → repas → recettes → liste (< 5 min)"
+memory:
+  foyer: "2 adultes et 2 enfants de 6 et 9 ans"
+  allergie: "arachides"
+  regime: "aucun"
+  habitude: "gamelles le midi pour les 2 adultes en semaine"
+  ustensile: [four, micro-ondes, airfryer]
+  frequence_courses: "toutes les semaines"
+  contrainte: "30 minutes max en semaine"
+steps:
+  - start: shopping
+    expect:
+      text_matches: "repas|dîners|diners|midi|soir"
+      text_not_matches: "allerg|combien (êtes|etes)-vous|combien de personnes|vous êtes combien"
+  - say: "Il me reste du riz, 6 oeufs et des carottes. Cette semaine il faut 5 dîners pour nous 4 et 3 gamelles pour le midi. Tu peux me proposer une première recette ?"
+    expect:
+      tools: [set_meal_plan, set_inventory]
+      soft_tools: [propose_recipe]
+  - accept_until_covered: {max: 6}
+  - say: "Parfait, fais-moi la liste de courses."
+    expect:
+      tools: [generate_shopping_list]
+checks:
+  list_generated: true
+  recipes_exclude: [arachide, cacahuete, cacahuète]
+  recipe_tool_errors_max: 1
+  max_ai_seconds: 300
+soft_checks:
+  meals_covered: true
+  inventory_in_list: [riz, oeuf]
+  recipe_tool_errors_max: 0
