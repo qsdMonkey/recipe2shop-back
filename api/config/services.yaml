@@ -8,11 +8,11 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     # Prompts versionnés (api/prompts/<nom>.md). La version est tracée dans generation_log.
-    app.prompt.shopping: system_v4
-    app.prompt.onboarding: onboarding_v2
+    app.prompt.shopping: system_v5
+    app.prompt.onboarding: onboarding_v3
     app.prompt.kickoff: kickoff_v1
-    app.prompt.recipe: recipe_v1
-    app.prompt.memory_review: memory_review_v1
+    app.prompt.recipe: recipe_v2
+    app.prompt.memory_review: memory_review_v2
     # Fuseau horaire utilisé pour donner la date du jour à l'IA.
     app.user_timezone: Europe/Paris
 

@@ -43,7 +43,7 @@ final class RecipeTest extends ApiTestCase
         self::assertSame(['thinkingLevel' => 'low'], $generation['generationConfig']['thinkingConfig']);
         self::assertContains('piece', $generation['generationConfig']['responseSchema']['properties']['ingredients']['items']['properties']['unit']['enum']);
         $system = $generation['systemInstruction']['parts'][0]['text'];
-        self::assertStringContainsString('Tu es le chef de Recipe2shop', $system);
+        self::assertStringContainsString('Tu es le chef de Recett\'IA', $system);
         self::assertStringContainsString('Allergies (CONTRAINTE ABSOLUE) [allergie] : « arachides »', $system);
         self::assertStringContainsString('Consigne de l\'assistant : chili végétarien', $generation['contents'][0]['parts'][0]['text']);
 
