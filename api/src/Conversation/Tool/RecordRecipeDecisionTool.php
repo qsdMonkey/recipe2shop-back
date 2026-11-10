@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Conversation\Tool;
 
 use App\Entity\SessionRecipeStatus;
+use App\Repository\FavoriteRecipeRepository;
 use App\Repository\SessionRecipeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -19,6 +20,7 @@ final class RecordRecipeDecisionTool implements ToolHandlerInterface
     public function __construct(
         private readonly SessionRecipeRepository $sessionRecipes,
         private readonly EntityManagerInterface $em,
+        private readonly FavoriteRecipeRepository $favorites,
     ) {
     }
 
@@ -60,6 +62,9 @@ final class RecordRecipeDecisionTool implements ToolHandlerInterface
         }
 
         $sessionRecipe->decide($decision, \is_string($args['comment'] ?? null) ? $args['comment'] : null);
+        if (SessionRecipeStatus::Accepted === $decision) {
+            $this->favorites->incrementAcceptances($context->user, (int) $sessionRecipe->getRecipe()->getId());
+        }
         $this->em->flush();
 
         return ToolResult::ok(['status' => 'ok', 'recipe_id' => $sessionRecipe->getRecipe()->getId(), 'decision' => $decision->value]);

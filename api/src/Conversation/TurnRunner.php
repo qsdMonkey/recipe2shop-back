@@ -144,6 +144,32 @@ final class TurnRunner
     }
 
     /**
+     * Modification de session hors IA (ex. ajout direct d'un favori) : même verrou qu'un tour, dans une transaction,
+     * sans appel Gemini ni rate limit.
+     *
+     * @template T
+     *
+     * @param callable(): T $operation
+     *
+     * @return T
+     */
+    public function runLocked(ShoppingSession $session, callable $operation): mixed
+    {
+        if (!$session->isActive()) {
+            throw new ApiException(409, 'session_archived', 'This session is archived (read-only).');
+        }
+        $this->acquireLock($session);
+        try {
+            return $this->em->wrapInTransaction(static fn () => $operation());
+        } catch (\Throwable $e) {
+            $this->em->clear();
+            throw $e;
+        } finally {
+            $this->releaseLock($session);
+        }
+    }
+
+    /**
      * @param list<array<string, mixed>> $blocks
      *
      * @return list<int>

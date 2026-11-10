@@ -8,6 +8,7 @@ use App\Entity\SessionRecipeStatus;
 use App\Entity\ShoppingSession;
 use App\Entity\Turn;
 use App\Http\ApiException;
+use App\Repository\FavoriteRecipeRepository;
 use App\Repository\SessionRecipeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -21,6 +22,7 @@ final class RecipeDecision
         private readonly SessionRecipeRepository $sessionRecipes,
         private readonly TurnRunner $turnRunner,
         private readonly EntityManagerInterface $em,
+        private readonly FavoriteRecipeRepository $favorites,
     ) {
     }
 
@@ -42,12 +44,15 @@ final class RecipeDecision
             blocks: [['type' => 'action', 'action' => $accept ? 'accept_recipe' : 'reject_recipe', 'recipe_id' => $recipeId, 'recipe_title' => $title, 'comment' => $comment]],
             kind: $accept ? Turn::KIND_ACCEPT_RECIPE : Turn::KIND_REJECT_RECIPE,
             // Vérifié dans la transaction du tour (après le verrou) : pas de double décision.
-            inTransaction: function () use ($sessionRecipe, $accept, $comment): void {
+            inTransaction: function () use ($sessionRecipe, $accept, $comment, $session, $recipeId): void {
                 $this->em->refresh($sessionRecipe);
                 if (!$sessionRecipe->isProposed()) {
                     throw new ApiException(409, 'recipe_not_proposed', 'This recipe has already been accepted or rejected.');
                 }
                 $sessionRecipe->decide($accept ? SessionRecipeStatus::Accepted : SessionRecipeStatus::Rejected, $comment);
+                if ($accept) {
+                    $this->favorites->incrementAcceptances($session->getUser(), $recipeId);
+                }
             },
         );
 

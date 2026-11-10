@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Presenter;
 
 use App\Entity\Message;
+use App\Repository\FavoriteRecipeRepository;
 use App\Repository\MemoryEventRepository;
 use App\Repository\SessionRecipeRepository;
 use App\Repository\ShoppingListRepository;
@@ -33,6 +34,7 @@ final class MessagePresenter
         private readonly RecipePresenter $recipePresenter,
         private readonly ShoppingListRepository $shoppingLists,
         private readonly ShoppingListPresenter $shoppingListPresenter,
+        private readonly FavoriteRecipeRepository $favorites,
     ) {
     }
 
@@ -70,7 +72,13 @@ final class MessagePresenter
             'events' => $this->memoryEvents->findByIds(array_values(array_unique($eventIds))),
             'session_recipes' => $this->sessionRecipes->findByIds(array_values(array_unique($sessionRecipeIds))),
             'lists' => $this->shoppingLists->findByIds(array_values(array_unique($listIds))),
+            'favorites' => [],
         ];
+        // Favoris des propriétaires des cartes (en pratique un seul utilisateur).
+        foreach ($refs['session_recipes'] as $sr) {
+            $userId = (int) $sr->getSession()->getUser()->getId();
+            $refs['favorites'][$userId] ??= $this->favorites->recipeIdsFor($sr->getSession()->getUser());
+        }
 
         $result = [];
         foreach ($messages as $message) {
@@ -94,7 +102,7 @@ final class MessagePresenter
 
     /**
      * @param array<string, mixed>                                                                                            $block
-     * @param array{events: array<int, \App\Entity\MemoryEvent>, session_recipes: array<int, \App\Entity\SessionRecipe>, lists: array<int, \App\Entity\ShoppingList>} $refs
+     * @param array{events: array<int, \App\Entity\MemoryEvent>, session_recipes: array<int, \App\Entity\SessionRecipe>, lists: array<int, \App\Entity\ShoppingList>, favorites: array<int, array<int, true>>} $refs
      *
      * @return array<string, mixed>|null null = bloc à ne plus afficher (référence disparue)
      */
@@ -113,7 +121,12 @@ final class MessagePresenter
         if ('recipe' === $block['type'] && isset($block['session_recipe_id'])) {
             $sessionRecipe = $refs['session_recipes'][(int) $block['session_recipe_id']] ?? null;
 
-            return null === $sessionRecipe ? null : ['type' => 'recipe'] + $this->recipePresenter->sessionRecipe($sessionRecipe);
+            if (null === $sessionRecipe) {
+                return null;
+            }
+            $favorite = isset($refs['favorites'][(int) $sessionRecipe->getSession()->getUser()->getId()][(int) $sessionRecipe->getRecipe()->getId()]);
+
+            return ['type' => 'recipe'] + $this->recipePresenter->sessionRecipe($sessionRecipe, $favorite);
         }
 
         $order = self::KEY_ORDER[$block['type']] ?? ['type'];

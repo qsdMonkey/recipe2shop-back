@@ -9,12 +9,13 @@ use App\Memory\MemoryManager;
 use App\Recipe\RecipeVocabulary;
 use App\Repository\IngredientRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Rattache un nom libre (« 2 oignons rouges », « Filet de poulet ») à un ingrédient du référentiel :
  * nom exact, alias, puis formes au singulier. Inconnu → nouvel ingrédient « to_review » (jamais d'erreur).
  */
-final class IngredientMatcher
+final class IngredientMatcher implements ResetInterface
 {
     /** @var array<string, Ingredient>|null nom ou alias normalisé → ingrédient */
     private ?array $index = null;

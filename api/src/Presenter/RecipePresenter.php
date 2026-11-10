@@ -11,13 +11,15 @@ final class RecipePresenter
 {
     /**
      * Carte recette (bloc recipe sans "type", et éléments de SessionDetail.recipes) : état actuel.
+     * $favorite : la recette est dans les favoris de l'utilisateur (état actuel, comme status).
      *
      * @return array<string, mixed>
      */
-    public function sessionRecipe(SessionRecipe $sessionRecipe): array
+    public function sessionRecipe(SessionRecipe $sessionRecipe, bool $favorite = false): array
     {
         return [
             'status' => $sessionRecipe->getStatus()->value,
+            'favorite' => $favorite,
             'suggested_day' => $sessionRecipe->getSuggestedDay(),
             'cooked' => $sessionRecipe->isCooked(),
             'warnings' => $sessionRecipe->getWarnings(),

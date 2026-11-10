@@ -6,6 +6,7 @@ namespace App\Presenter;
 
 use App\Entity\SessionType;
 use App\Entity\ShoppingSession;
+use App\Repository\FavoriteRecipeRepository;
 use App\Repository\MessageRepository;
 use App\Repository\SessionRecipeRepository;
 use App\Repository\ShoppingListRepository;
@@ -19,6 +20,7 @@ final class SessionPresenter
         private readonly RecipePresenter $recipePresenter,
         private readonly ShoppingListRepository $shoppingLists,
         private readonly ShoppingListPresenter $shoppingListPresenter,
+        private readonly FavoriteRecipeRepository $favorites,
     ) {
     }
 
@@ -43,10 +45,15 @@ final class SessionPresenter
     /** @return array<string, mixed> SessionDetail */
     public function detail(ShoppingSession $session): array
     {
+        $favoriteIds = $this->favorites->recipeIdsFor($session->getUser());
+
         return $this->summary($session) + [
             'read_only' => !$session->isActive(),
             'messages' => $this->messagePresenter->presentMany($this->messages->findForSession($session)),
-            'recipes' => array_map($this->recipePresenter->sessionRecipe(...), $this->sessionRecipes->findForSession($session)),
+            'recipes' => array_map(
+                fn ($sr): array => $this->recipePresenter->sessionRecipe($sr, isset($favoriteIds[(int) $sr->getRecipe()->getId()])),
+                $this->sessionRecipes->findForSession($session),
+            ),
             'shopping_lists' => array_map($this->shoppingListPresenter->summary(...), $this->shoppingLists->findForSession($session)),
         ];
     }

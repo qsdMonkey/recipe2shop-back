@@ -176,7 +176,7 @@ final class SessionTest extends ApiTestCase
         $logs = $this->em()->getRepository(GenerationLog::class)->findBy([], ['id' => 'ASC']);
         self::assertSame([true, false, true], array_map(static fn (GenerationLog $l): bool => $l->isSuccess(), $logs));
         self::assertSame(['greeting', 'conversation', 'conversation'], array_map(static fn (GenerationLog $l): string => $l->getPurpose(), $logs));
-        self::assertSame('system_v5', $logs[0]->getPromptVersion());
+        self::assertSame('system_v6', $logs[0]->getPromptVersion());
         // 1000 tokens × 0,30 $/M + (100 + 50) tokens × 2,50 $/M
         self::assertSame('0.000675', $logs[0]->getCostUsd());
     }

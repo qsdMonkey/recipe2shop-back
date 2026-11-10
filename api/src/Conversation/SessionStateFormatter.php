@@ -7,6 +7,7 @@ namespace App\Conversation;
 use App\Entity\InventoryItem;
 use App\Entity\SessionRecipeStatus;
 use App\Entity\ShoppingSession;
+use App\Repository\FavoriteRecipeRepository;
 use App\Repository\SessionRecipeRepository;
 use App\Repository\ShoppingListRepository;
 use App\Ingredient\IngredientMatcher;
@@ -18,12 +19,15 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class SessionStateFormatter
 {
+    public const FAVORITES_IN_CONTEXT = 30;
+
     public function __construct(
         private readonly SessionRecipeRepository $sessionRecipes,
         private readonly EntityManagerInterface $em,
         private readonly ShoppingListRepository $shoppingLists,
         private readonly ShoppingListService $shoppingListService,
         private readonly IngredientMatcher $matcher,
+        private readonly FavoriteRecipeRepository $favorites,
     ) {
     }
 
@@ -54,8 +58,10 @@ final class SessionStateFormatter
         $lines[] = '- Ce que l\'utilisateur a déjà (inventaire, set_inventory) : '.([] === $inventory ? 'rien de déclaré.' : implode(', ', array_map(self::formatInventory(...), $inventory)).'.');
 
         $accepted = $pending = $rejected = [];
+        $inSession = [];
         foreach ($this->sessionRecipes->findForSession($session) as $sr) {
             $recipe = $sr->getRecipe();
+            $inSession[(int) $recipe->getId()] = $sr->getStatus();
             $label = \sprintf('« %s » (recipe_id %d, %d repas%s)', $recipe->getTitle(), $recipe->getId(), $recipe->getMealsCovered(), null === $sr->getSuggestedDay() ? '' : ', jour '.$sr->getSuggestedDay());
             match ($sr->getStatus()) {
                 SessionRecipeStatus::Accepted => $accepted[] = $label.($sr->isCooked() ? ' [déjà cuisinée]' : ''),
@@ -68,6 +74,8 @@ final class SessionStateFormatter
             $lines[] = '- Recette proposée, en attente de la réponse de l\'utilisateur : '.implode(' ; ', $pending).'. S\'il répond par écrit, enregistre sa décision avec record_recipe_decision avant toute nouvelle proposition.';
         }
         $lines[] = '- Recettes refusées (ne pas les reproposer, tenir compte des commentaires) : '.([] === $rejected ? 'aucune.' : implode(' ; ', $rejected).'.');
+
+        array_push($lines, ...$this->favoriteLines($session, $inSession));
 
         $lists = [];
         foreach ($this->shoppingLists->findForSession($session) as $list) {
@@ -87,6 +95,44 @@ final class SessionStateFormatter
         $fragile = $this->fragileProducts($session);
         if ([] !== $fragile) {
             $lines[] = '- Durées de conservation indicatives (référentiel) des produits frais de la session : '.implode(', ', $fragile).'. Prévois-les en début de période.';
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Recettes favorites (les 30 plus récentes), reproposables telles quelles avec propose_favorite.
+     *
+     * @param array<int, SessionRecipeStatus> $inSession statut des recettes déjà dans la session, par recipe_id
+     *
+     * @return list<string>
+     */
+    private function favoriteLines(ShoppingSession $session, array $inSession): array
+    {
+        $favorites = $this->favorites->findForUser($session->getUser(), self::FAVORITES_IN_CONTEXT);
+        if ([] === $favorites) {
+            return ['- Recettes favorites de l\'utilisateur : aucune.'];
+        }
+        $lines = ['- Recettes favorites de l\'utilisateur (à reproposer avec propose_favorite, sans les régénérer) :'];
+        foreach ($favorites as $favorite) {
+            $recipe = $favorite->getRecipe();
+            $status = $inSession[(int) $recipe->getId()] ?? null;
+            $lines[] = \sprintf(
+                '  - « %s » (recipe_id %d, %d repas, %s, %d min de préparation + %d min de cuisson, %d personnes)%s',
+                $recipe->getTitle(),
+                $recipe->getId(),
+                $recipe->getMealsCovered(),
+                [] === $recipe->getMealTags() ? 'sans étiquette' : implode('/', $recipe->getMealTags()),
+                $recipe->getPrepTimeMin(),
+                $recipe->getCookTimeMin(),
+                $recipe->getServings(),
+                match ($status) {
+                    SessionRecipeStatus::Rejected => ' [REFUSÉE dans cette session : ne pas la reproposer]',
+                    SessionRecipeStatus::Accepted => ' [déjà acceptée dans cette session]',
+                    SessionRecipeStatus::Proposed => ' [proposée, en attente de réponse]',
+                    null => '',
+                },
+            );
         }
 
         return $lines;

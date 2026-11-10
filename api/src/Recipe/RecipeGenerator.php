@@ -94,7 +94,7 @@ final class RecipeGenerator
                         $data['ingredients'][$i]['name'] = $this->accents->restore($ingredient['name']);
                     }
 
-                    return new GeneratedRecipe($data, $this->warnings($session, $data), $attempt);
+                    return new GeneratedRecipe($data, $this->equipmentWarnings($session, $data['equipment']), $attempt);
                 }
             }
 
@@ -195,15 +195,17 @@ final class RecipeGenerator
     /**
      * Ustensile requis absent de la mémoire (hors ustensiles de base) → simple avertissement (fiche 03).
      *
-     * @param array<string, mixed> $data
+     * Aussi recalculé quand un favori est reproposé (le profil a pu changer depuis).
+     *
+     * @param list<string> $equipmentList
      *
      * @return list<string>
      */
-    private function warnings(ShoppingSession $session, array $data): array
+    public function equipmentWarnings(ShoppingSession $session, array $equipmentList): array
     {
         $owned = array_map(static fn ($item): string => MemoryManager::normalize($item->getValue()), $this->memory->findInCategory($session->getUser(), MemoryCategory::Ustensile));
         $warnings = [];
-        foreach ($data['equipment'] as $equipment) {
+        foreach ($equipmentList as $equipment) {
             $normalized = MemoryManager::normalize($equipment);
             if (\in_array($normalized, RecipeVocabulary::BASIC_EQUIPMENT, true)) {
                 continue;
