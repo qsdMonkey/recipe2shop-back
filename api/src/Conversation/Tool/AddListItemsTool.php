@@ -6,6 +6,9 @@ namespace App\Conversation\Tool;
 
 use App\Entity\ShoppingItemOrigin;
 use App\Ingredient\AccentRestorer;
+use App\Ingredient\IngredientMatcher;
+use App\Recipe\WeightRule;
+use App\ShoppingList\Units;
 use App\Recipe\RecipeVocabulary;
 use App\Repository\ShoppingListRepository;
 use App\ShoppingList\ShoppingListService;
@@ -23,6 +26,7 @@ final class AddListItemsTool implements ToolHandlerInterface
         private readonly ShoppingListService $service,
         private readonly EntityManagerInterface $em,
         private readonly AccentRestorer $accents,
+        private readonly IngredientMatcher $matcher,
     ) {
     }
 
@@ -46,7 +50,7 @@ final class AddListItemsTool implements ToolHandlerInterface
                             'properties' => [
                                 'label' => ['type' => 'string', 'description' => 'Nom simple (« lait », « papier toilette »).'],
                                 'quantity' => ['type' => 'number', 'description' => 'Seulement si l\'utilisateur la donne ou si elle est utile (ex. quantités d\'un apéro). Pas pour « du PQ », « de la lessive ».'],
-                                'unit' => ['type' => 'string', 'enum' => RecipeVocabulary::UNITS],
+                                'unit' => ['type' => 'string', 'enum' => RecipeVocabulary::UNITS, 'description' => 'Poids (g, kg) pour les fruits, légumes, viandes, fromages ; volume (ml, cl, l) pour les liquides. « piece » seulement pour les œufs et ce qui se compte vraiment (PQ, lessive, pain).'],
                                 'category' => ['type' => 'string', 'enum' => RecipeVocabulary::CATEGORIES],
                             ],
                             'required' => ['label'],
@@ -78,7 +82,9 @@ final class AddListItemsTool implements ToolHandlerInterface
             $unit = \is_string($item['unit'] ?? null) && \in_array($item['unit'], RecipeVocabulary::UNITS, true) ? $item['unit'] : null;
             $quantity = is_numeric($item['quantity'] ?? null) && $item['quantity'] > 0 ? (float) $item['quantity'] : null;
             $category = \is_string($item['category'] ?? null) ? $item['category'] : null;
-            $this->service->addItem($list, ShoppingItemOrigin::Assistant, $this->accents->restore($label), $quantity, $unit, $category);
+            $label = $this->accents->restore($label);
+            [$quantity, $unit] = $this->inWeight($label, $quantity, $unit);
+            $this->service->addItem($list, ShoppingItemOrigin::Assistant, $label, $quantity, $unit, $category);
             $added[] = $label;
         }
         $this->em->flush();
@@ -87,5 +93,24 @@ final class AddListItemsTool implements ToolHandlerInterface
             ['status' => 'ok', 'list_id' => $list->getId(), 'added' => $added] + $this->service->counts($list),
             [['type' => 'shopping_list', 'list_id' => $list->getId()]],
         );
+    }
+
+    /**
+     * Règle des poids : « 3 carottes » → 300 g quand le poids moyen est connu au référentiel.
+     *
+     * @return array{0: ?float, 1: ?string}
+     */
+    private function inWeight(string $label, ?float $quantity, ?string $unit): array
+    {
+        if (null === $quantity || 'piece' !== $unit) {
+            return [$quantity, $unit];
+        }
+        $ingredient = $this->matcher->find($label);
+        $weight = $ingredient?->getAvgWeightPerPiece();
+        if (null === $ingredient || null === $weight || $weight <= 0 || WeightRule::pieceAllowed($ingredient->getName(), $ingredient->getCategory())) {
+            return [$quantity, $unit];
+        }
+
+        return Units::forShopping('mass', $quantity * $weight);
     }
 }

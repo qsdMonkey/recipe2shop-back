@@ -6,8 +6,8 @@ La version utilisée est enregistrée dans `generation_log.prompt_version` à ch
 
 | Fichier | Rôle |
 |---------|------|
-| `system_v6.md` | Prompt système des sessions de courses (v6 : recettes favorites, propose_favorite). v5 : nom de l'app « Recett'IA », v4 : listes, v3 : recettes, v2 : mémoire, v1 : étape 3 |
-| `recipe_v3.md` | Génération d'une recette (appel dédié, JSON imposé par responseSchema ; v3 : accents exigés ; v2 : nom « Recett'IA ») |
+| `system_v7.md` | Prompt système des sessions de courses (v7 : start_cooking « pas à pas », quantités en poids dans add_list_items). v6 : recettes favorites, v5 : nom de l'app « Recett'IA », v4 : listes, v3 : recettes, v2 : mémoire, v1 : étape 3 |
+| `recipe_v4.md` | Génération d'une recette (appel dédié, JSON imposé par responseSchema ; v4 : quantités en poids, pas-à-pas détaillé, astuces ; v3 : accents exigés ; v2 : nom « Recett'IA ») |
 | `memory_review_v2.md` | Relecture mémoire de fin de session (JSON imposé ; v2 : nom « Recett'IA ») |
 | `memory_review_intro.md` | Texte au-dessus des puces de la relecture, au début de la session suivante |
 | `onboarding_v3.md` | Prompt système de l'onboarding (v3 : nom « Recett'IA » ; v2 : update_memory / finish_onboarding). v1 : étape 3 |

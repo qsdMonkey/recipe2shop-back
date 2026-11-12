@@ -55,6 +55,10 @@ class Recipe
     #[ORM\Column(type: Types::JSON)]
     private array $steps;
 
+    /** @var list<string> astuces (variantes, erreurs à éviter, conservation) ; [] pour les recettes d'avant recipe_v4 */
+    #[ORM\Column(type: Types::JSON)]
+    private array $tips;
+
     /** @var list<string> */
     #[ORM\Column(type: Types::JSON)]
     private array $equipment;
@@ -78,7 +82,7 @@ class Recipe
     private \DateTimeImmutable $createdAt;
 
     /**
-     * @param array{title: string, description: ?string, servings: int, meals_covered: int, meal_tags: list<string>, prep_time_min: int, cook_time_min: int, difficulty: string, uses_inventory: list<string>, ingredients: list<array{name: string, quantity: float|int|null, unit: ?string, category: string, optional: bool}>, steps: list<string>, equipment: list<string>, storage_tip: ?string} $data
+     * @param array{title: string, description: ?string, servings: int, meals_covered: int, meal_tags: list<string>, prep_time_min: int, cook_time_min: int, difficulty: string, uses_inventory: list<string>, ingredients: list<array{name: string, quantity: float|int|null, unit: ?string, category: string, optional: bool}>, steps: list<string>, tips?: list<string>, equipment: list<string>, storage_tip: ?string} $data
      */
     public function __construct(array $data, ?User $createdBy, string $promptVersion)
     {
@@ -92,6 +96,7 @@ class Recipe
         $this->difficulty = $data['difficulty'];
         $this->usesInventory = array_values($data['uses_inventory']);
         $this->steps = array_values($data['steps']);
+        $this->tips = array_values($data['tips'] ?? []);
         $this->equipment = array_values($data['equipment']);
         $this->storageTip = $data['storage_tip'];
         $this->createdBy = $createdBy;
@@ -159,6 +164,12 @@ class Recipe
     public function getSteps(): array
     {
         return $this->steps;
+    }
+
+    /** @return list<string> */
+    public function getTips(): array
+    {
+        return $this->tips;
     }
 
     /** @return list<string> */

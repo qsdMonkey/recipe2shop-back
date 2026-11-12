@@ -10,13 +10,14 @@ use App\Entity\Recipe;
 use App\Entity\SessionRecipeStatus;
 use App\Entity\ShoppingSession;
 use App\Ingredient\IngredientMatcher;
+use App\Recipe\WeightRule;
 use App\Repository\SessionRecipeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Agrégation déterministe de la liste principale (fiche 04) — « l'IA génère, le code calcule » :
  * 1. regroupement des ingrédients des recettes acceptées par ingrédient du référentiel ;
- * 2. conversion vers une unité commune (g↔kg, ml↔cl↔l, c. à s.→ml, pièce↔g via le poids moyen) ;
+ * 2. conversion vers une unité commune (g↔kg, ml↔cl↔l, c. à s.→ml, pièce→g via le poids moyen : règle des poids) ;
  * 3. déduction de l'inventaire déclaré ;
  * 4. arrondi à l'achat. Les produits de base sont repérés (affichés à part par la présentation).
  */
@@ -155,6 +156,20 @@ final class ShoppingListBuilder
         // Herbes fraîches & co (vendues en botte) : « 2 pièces » ou « 1 c. à s. » de coriandre → 1 botte par recette.
         if ('botte' === $preferred && 'botte' !== $unit) {
             return ['botte', 1.0];
+        }
+
+        if (null !== $weight && $weight > 0) {
+            // Règle des poids : les produits qui ne se comptent pas (carotte, courgette, viande…) sont toujours en g / kg,
+            // même si une ancienne recette ou l'inventaire les donne en pièces.
+            // (l'ail en gousses ou le jambon en tranches gardent leur unité de comptage).
+            if (!WeightRule::pieceAllowed($ingredient->getName(), $ingredient->getCategory())) {
+                if ('piece' === $unit) {
+                    return ['mass', $value * $weight];                    // 3 carottes → 300 g
+                }
+                if ('piece' === $preferred) {
+                    return [$dimension, $value];                          // 300 g de carotte : restent en grammes
+                }
+            }
         }
 
         if (null !== $weight && $weight > 0 && null !== $preferred) {

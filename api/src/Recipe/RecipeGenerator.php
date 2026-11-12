@@ -152,7 +152,12 @@ final class RecipeGenerator
         // Une quantité sans unité est ambiguë (sauf « à volonté » : quantité et unité nulles).
         foreach (\is_array($data['ingredients'] ?? null) ? $data['ingredients'] : [] as $i => $ingredient) {
             if (\is_array($ingredient) && null !== ($ingredient['quantity'] ?? null) && null === ($ingredient['unit'] ?? null)) {
-                $errors[] = \sprintf('[ingredients][%d] : une quantité doit avoir une unité (utilise « piece » pour les pièces).', $i);
+                $errors[] = \sprintf('[ingredients][%d] : une quantité doit avoir une unité (g ou kg pour les solides, ml, cl ou l pour les liquides).', $i);
+            }
+            // Règle des poids : pas de « 3 carottes » mais « 300 g de carottes ».
+            if (\is_array($ingredient) && 'piece' === ($ingredient['unit'] ?? null) && \is_string($ingredient['name'] ?? null) && \is_string($ingredient['category'] ?? null)
+                && !WeightRule::pieceAllowed($ingredient['name'], $ingredient['category'])) {
+                $errors[] = \sprintf('[ingredients][%d] (« %s ») : l\'unité « piece » est interdite pour ce produit. Donne un poids en g ou kg (liquides : ml, cl ou l). « piece » est réservé aux œufs et à ce qui n\'a pas de poids pertinent (feuille de laurier, cube de bouillon).', $i, $ingredient['name']);
             }
         }
 
@@ -186,6 +191,7 @@ final class RecipeGenerator
                 'optional' => $i['optional'],
             ], array_values($data['ingredients'])),
             'steps' => $trimList($data['steps']),
+            'tips' => $trimList(\is_array($data['tips'] ?? null) ? $data['tips'] : []),
             'equipment' => $trimList($data['equipment']),
             'suggested_day' => $data['suggested_day'],
             'storage_tip' => '' === trim((string) $data['storage_tip']) ? null : trim($data['storage_tip']),

@@ -229,7 +229,7 @@ final class RecipeTest extends ApiTestCase
         $recipe = $this->request('GET', "/recipes/$recipeId?servings=3", null, $this->token);
         self::assertResponseIsSuccessful();
         self::assertSame(3, $recipe['servings']);
-        self::assertSame([1200, 3, 30, null], array_column($recipe['ingredients'], 'quantity'));
+        self::assertSame([1200, 450, 30, null], array_column($recipe['ingredients'], 'quantity'));
 
         $this->request('GET', "/recipes/$recipeId", null, $this->registerUser('bob@example.com'));
         self::assertResponseStatusCodeSame(404);

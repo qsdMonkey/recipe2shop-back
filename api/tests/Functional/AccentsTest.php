@@ -37,7 +37,7 @@ final class AccentsTest extends ApiTestCase
             ['name' => 'tortilla de ble', 'quantity' => 6, 'unit' => 'piece', 'category' => 'boulangerie', 'optional' => false],
             ['name' => 'epices a fajitas', 'quantity' => 1, 'unit' => 'sachet', 'category' => 'epicerie', 'optional' => false],
             ['name' => 'creme fraiche', 'quantity' => 20, 'unit' => 'cl', 'category' => 'cremerie', 'optional' => false],
-            ['name' => 'poivron rouge', 'quantity' => 2, 'unit' => 'piece', 'category' => 'fruits_legumes', 'optional' => false],
+            ['name' => 'poivron rouge', 'quantity' => 360, 'unit' => 'g', 'category' => 'fruits_legumes', 'optional' => false],
         ]]));
         FakeGemini::queueText('Des fajitas ?');
         $turn = $this->request('POST', \sprintf('/sessions/%d/messages', $session['id']), ['text' => 'Une idée'], $token);
@@ -67,7 +67,7 @@ final class AccentsTest extends ApiTestCase
         $tortilla = (int) $db->fetchOne("SELECT id FROM ingredient WHERE name = 'tortilla de blé'");
         $db->executeStatement("INSERT INTO ingredient (name, normalized_name, category, basic, to_review, aliases) VALUES ('epices a fajitas', 'epices a fajitas test', 'epicerie', 0, 1, '[]')");
         $spices = (int) $db->lastInsertId();
-        $db->executeStatement("INSERT INTO recipe (title, servings, meals_covered, meal_tags, prep_time_min, cook_time_min, difficulty, uses_inventory, steps, equipment, prompt_version, created_at) VALUES ('Fajitas', 2, 1, '[]', 10, 10, 'easy', '[]', '[\"x\"]', '[]', 'recipe_v1', NOW())");
+        $db->executeStatement("INSERT INTO recipe (title, servings, meals_covered, meal_tags, prep_time_min, cook_time_min, difficulty, uses_inventory, steps, tips, equipment, prompt_version, created_at) VALUES ('Fajitas', 2, 1, '[]', 10, 10, 'easy', '[]', '[\"x\"]', '[]', '[]', 'recipe_v1', NOW())");
         $recipe = (int) $db->lastInsertId();
         $curry = (int) $db->fetchOne("SELECT id FROM ingredient WHERE normalized_name = 'pate de curry'");
         $db->executeStatement("INSERT INTO recipe_ingredient (recipe_id, position, name, quantity, unit, category, optional, ingredient_id) VALUES (?, 0, 'tortilla de ble', 6, 'piece', 'boulangerie', 0, ?), (?, 1, 'epices a fajitas', 1, 'sachet', 'epicerie', 0, ?), (?, 2, 'pâte de curry rouge', 1, 'cas', 'epicerie', 0, ?)", [$recipe, $tortilla, $recipe, $spices, $recipe, $curry]);

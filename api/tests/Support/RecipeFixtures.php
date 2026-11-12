@@ -25,11 +25,12 @@ final class RecipeFixtures
             'uses_inventory' => ['riz'],
             'ingredients' => [
                 ['name' => 'haricots rouges', 'quantity' => 800, 'unit' => 'g', 'category' => 'epicerie', 'optional' => false],
-                ['name' => 'oignon', 'quantity' => 2, 'unit' => 'piece', 'category' => 'fruits_legumes', 'optional' => false],
+                ['name' => 'oignon', 'quantity' => 300, 'unit' => 'g', 'category' => 'fruits_legumes', 'optional' => false],
                 ['name' => 'crème fraîche', 'quantity' => 20, 'unit' => 'cl', 'category' => 'cremerie', 'optional' => true],
                 ['name' => 'sel', 'quantity' => null, 'unit' => null, 'category' => 'epicerie', 'optional' => false],
             ],
             'steps' => ['Émincer les oignons.', 'Mijoter 30 min.'],
+            'tips' => ['Encore meilleur réchauffé le lendemain.', 'Se congèle très bien en portions.'],
             'equipment' => ['cocotte'],
             'suggested_day' => 1,
             'storage_tip' => 'Se garde 3 jours au frigo.',

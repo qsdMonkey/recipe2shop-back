@@ -25,6 +25,7 @@ final class MessagePresenter
         'action' => ['type', 'action', 'recipe_id', 'recipe_title', 'comment'],
         'new_session' => ['type', 'reason'],
         'finish_onboarding' => ['type'],
+        'cooking_guide' => ['type', 'recipe_id', 'title', 'servings'],
     ];
 
     public function __construct(

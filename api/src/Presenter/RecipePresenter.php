@@ -59,6 +59,7 @@ final class RecipePresenter
             'uses_inventory' => $recipe->getUsesInventory(),
             'ingredients' => $ingredients,
             'steps' => $recipe->getSteps(),
+            'tips' => $recipe->getTips(),
             'equipment' => $recipe->getEquipment(),
             'storage_tip' => $recipe->getStorageTip(),
         ];

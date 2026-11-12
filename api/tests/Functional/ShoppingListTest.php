@@ -34,7 +34,7 @@ final class ShoppingListTest extends ApiTestCase
     {
         $this->givenAcceptedRecipe('Chili', [
             ['oignons', 2, 'piece', 'fruits_legumes'],
-            ['oignon', 150, 'g', 'fruits_legumes'],          // 150 g ÷ 150 g/pièce = 1 pièce
+            ['oignon', 150, 'g', 'fruits_legumes'],          // règle des poids : les pièces sont converties en g (150 g/pièce)
             ['riz', 400, 'g', 'epicerie'],
             ['crème fraîche', 20, 'cl', 'cremerie', true],
             ['sel', null, null, 'epicerie'],
@@ -62,7 +62,7 @@ final class ShoppingListTest extends ApiTestCase
         self::assertSame(['fruits_legumes', 'cremerie', 'epicerie'], array_column($list['sections'], 'category'));
 
         $items = $this->itemsByLabel($list);
-        self::assertSame([4, 'piece'], [$items['oignon']['quantity'], $items['oignon']['unit']]);
+        self::assertSame([600, 'g'], [$items['oignon']['quantity'], $items['oignon']['unit']]); // 4 pièces × 150 g
         self::assertCount(3, $items['oignon']['sources']);
         self::assertSame(['Chili', 2, 'piece'], [$items['oignon']['sources'][0]['recipe_title'], $items['oignon']['sources'][0]['quantity'], $items['oignon']['sources'][0]['unit']]);
         self::assertSame([400, 'g', ['quantity' => 500, 'unit' => 'g']], [$items['riz']['quantity'], $items['riz']['unit'], $items['riz']['inventory_deducted']]);
@@ -110,10 +110,10 @@ final class ShoppingListTest extends ApiTestCase
         self::assertResponseIsSuccessful();
         self::assertFalse($list['outdated']);
         $items = $this->itemsByLabel($list);
-        self::assertSame([3, true], [$items['oignon']['quantity'], $items['oignon']['checked']]); // quantité recalculée, case gardée
+        self::assertSame([450, true], [$items['oignon']['quantity'], $items['oignon']['checked']]); // quantité recalculée, case gardée
         self::assertArrayNotHasKey('ail', $items);                                               // exclu par l'utilisateur
         self::assertSame([1, 'l', 'manual'], [$items['Lait']['quantity'], $items['Lait']['unit'], $items['Lait']['origin']]);
-        self::assertSame(2, $items['courgette']['quantity']);
+        self::assertSame([500, 'g'], [$items['courgette']['quantity'], $items['courgette']['unit']]); // 2 pièces × 250 g
     }
 
     public function testItemRoutes(): void
@@ -180,7 +180,7 @@ final class ShoppingListTest extends ApiTestCase
 
             Fruits et légumes
             - coriandre : 1 botte (facultatif)
-            - oignon : 3
+            - oignon : 450 g
 
             Crèmerie
             - crème fraîche : 20 cl
@@ -272,6 +272,52 @@ final class ShoppingListTest extends ApiTestCase
         $body = $this->request('POST', '/shopping-lists/'.$list['id'].'/items', ['label' => 'lait'], $this->token);
         self::assertResponseStatusCodeSame(409);
         self::assertSame('session_archived', $body['error']);
+    }
+
+    public function testPiecesAreConvertedToGramsInTheListAndInventoryDeduction(): void
+    {
+        // Ancienne recette (avant la règle des poids) encore en pièces.
+        $this->givenAcceptedRecipe('Ratatouille', [
+            ['courgette', 3, 'piece', 'fruits_legumes'],  // 3 × 250 g
+            ['carotte', 2, 'piece', 'fruits_legumes'],    // 2 × 100 g
+            ['carotte', 250, 'g', 'fruits_legumes'],
+            ['œuf', 4, 'piece', 'cremerie'],              // les œufs restent en pièces
+            ['laurier', 1, 'piece', 'epicerie'],
+            ['ail', 2, 'gousse', 'fruits_legumes'],       // l'ail reste en gousses
+            ['céleri', 1, 'piece', 'fruits_legumes'],     // poids moyen inconnu : reste en pièce
+        ]);
+        $this->givenInventory([['courgette', 1, 'piece']]); // déduite en grammes (250 g)
+
+        $items = $this->itemsByLabel($this->generateMainList());
+
+        self::assertSame([500, 'g', ['quantity' => 250, 'unit' => 'g']], [$items['courgette']['quantity'], $items['courgette']['unit'], $items['courgette']['inventory_deducted']]);
+        self::assertSame([450, 'g'], [$items['carotte']['quantity'], $items['carotte']['unit']]);
+        self::assertSame([4, 'piece'], [$items['œuf']['quantity'], $items['œuf']['unit']]);
+        self::assertSame([1, 'piece'], [$items['laurier']['quantity'], $items['laurier']['unit']]);
+        self::assertSame([2, 'gousse'], [$items['ail']['quantity'], $items['ail']['unit']]);
+        self::assertSame([1, 'piece'], [$items['céleri']['quantity'], $items['céleri']['unit']]);
+    }
+
+    public function testItemsAddedByTheAssistantInPiecesAreConvertedToGrams(): void
+    {
+        $this->givenAcceptedRecipe('Chili', [['riz', 400, 'g', 'epicerie']]);
+        $list = $this->generateMainList();
+
+        FakeGemini::queueFunctionCall('add_list_items', ['list_id' => $list['id'], 'items' => [
+            ['label' => 'carottes', 'quantity' => 3, 'unit' => 'piece'],
+            ['label' => 'oeufs', 'quantity' => 6, 'unit' => 'piece'],
+            ['label' => 'papier toilette', 'quantity' => 1, 'unit' => 'piece'],
+        ]]);
+        FakeGemini::queueText('Ajouté.');
+        $this->say('Ajoute 3 carottes, 6 œufs et du PQ');
+
+        $items = $this->itemsByLabel($this->request('GET', '/shopping-lists/'.$list['id'], null, $this->token));
+        self::assertSame([300, 'g', 'assistant'], [$items['carottes']['quantity'], $items['carottes']['unit'], $items['carottes']['origin']]);
+        self::assertSame([6, 'piece'], [$items['œufs']['quantity'], $items['œufs']['unit']]); // accents restaurés, œufs en pièces
+        self::assertSame([1, 'piece'], [$items['papier toilette']['quantity'], $items['papier toilette']['unit']]);
+        $declarations = FakeGemini::$requests[\count(FakeGemini::$requests) - 2]['body']['tools'][0]['functionDeclarations'];
+        $addItems = array_values(array_filter($declarations, static fn (array $d): bool => 'add_list_items' === $d['name']))[0];
+        self::assertStringContainsString('Poids (g, kg)', $addItems['parameters']['properties']['items']['items']['properties']['unit']['description']);
     }
 
     /** @return array<string, mixed> */
