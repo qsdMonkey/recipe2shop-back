@@ -9,9 +9,9 @@
 	root * /app/public
 	encode zstd gzip
 
-	# Les corps de requête de l'API sont petits (JSON) : 1 Mo max.
+	# Corps JSON : petits, sauf un message avec photo (2 Mo décodés ≈ 2,7 Mo en base64) : 4 Mo max.
 	request_body {
-		max_size 1MB
+		max_size 4MB
 	}
 
 	header -Server

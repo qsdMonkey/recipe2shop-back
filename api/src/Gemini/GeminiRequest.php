@@ -22,6 +22,8 @@ final class GeminiRequest
         public readonly ?string $thinkingLevel = null,
         public readonly ?array $responseSchema = null,
         public readonly ?float $maxDurationSeconds = null,
+        /** MEDIA_RESOLUTION_LOW|MEDIUM|HIGH : résolution des images (null = défaut du modèle) */
+        public readonly ?string $mediaResolution = null,
     ) {
     }
 }

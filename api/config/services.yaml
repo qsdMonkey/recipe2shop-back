@@ -8,7 +8,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     # Prompts versionnés (api/prompts/<nom>.md). La version est tracée dans generation_log.
-    app.prompt.shopping: system_v7
+    app.prompt.shopping: system_v8
     app.prompt.onboarding: onboarding_v3
     app.prompt.kickoff: kickoff_v1
     app.prompt.recipe: recipe_v4

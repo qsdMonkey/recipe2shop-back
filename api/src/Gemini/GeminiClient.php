@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Gemini;
 
+use App\Logging\SensitiveDataProcessor;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -53,7 +54,7 @@ final class GeminiClient
                 $status = $response->getStatusCode();
                 $data = $response->toArray(false);
             } catch (HttpClientException $e) {
-                throw new GeminiException('Gemini transport error: '.$e->getMessage(), 0, $e);
+                throw new GeminiException('Gemini transport error: '.SensitiveDataProcessor::maskBase64($e->getMessage()), 0, $e);
             }
 
             if (\in_array($status, self::RETRYABLE_STATUSES, true) && $attempt < 2 && null === $request->maxDurationSeconds) {
@@ -61,7 +62,8 @@ final class GeminiClient
                 continue;
             }
             if ($status >= 400) {
-                throw new GeminiException(\sprintf('Gemini HTTP %d: %s', $status, $data['error']['message'] ?? 'unknown error'));
+                // Gemini recopie parfois la valeur fautive dans son message (ex. base64 d'une photo) : masquée.
+                throw new GeminiException(\sprintf('Gemini HTTP %d: %s', $status, SensitiveDataProcessor::maskBase64((string) ($data['error']['message'] ?? 'unknown error'))));
             }
             break;
         }
@@ -116,6 +118,9 @@ final class GeminiClient
         }
         if (null !== $request->thinkingLevel) {
             $body['generationConfig']['thinkingConfig'] = ['thinkingLevel' => $request->thinkingLevel];
+        }
+        if (null !== $request->mediaResolution) {
+            $body['generationConfig']['mediaResolution'] = $request->mediaResolution;
         }
 
         if ([] !== $request->functionDeclarations) {

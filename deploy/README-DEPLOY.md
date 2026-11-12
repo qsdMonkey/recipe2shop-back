@@ -128,7 +128,7 @@ gunzip -c backups/recipe2shop-AAAAMMJJ-HHMMSS.sql.gz | $C exec -T mysql sh -c 'm
   - `Host`.
   - L'API ne les accepte que depuis des IP privées (`TRUSTED_PROXIES`). C'est indispensable pour les limites de débit (inscription, connexion), qui doivent voir la vraie IP du client.
 - **Timeouts** de lecture et d'envoi **≥ 90 s**. Un tour d'IA avec recette prend environ 15 s, le maximum côté API est d'environ 50 s, et le timeout de l'app est de 60 s.
-- **Taille du corps** : 1 Mo suffit (l'API refuse au-delà).
+- **Taille du corps** : **4 Mo**. Un message avec photo pèse jusqu'à environ 2,7 Mo, et l'API refuse au-delà de 4 Mo. Avec nginx, la valeur par défaut est 1 Mo : il faut `client_max_body_size 4m`.
 - **HTTPS** : HSTS est envoyé par l'API quand `X-Forwarded-Proto: https` est présent.
 
 Exemple nginx :
@@ -142,7 +142,7 @@ location / {
     proxy_set_header X-Forwarded-Host $host;
     proxy_read_timeout 90s;
     proxy_send_timeout 90s;
-    client_max_body_size 1m;
+    client_max_body_size 4m;
 }
 ```
 

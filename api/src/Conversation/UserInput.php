@@ -7,7 +7,7 @@ namespace App\Conversation;
 use App\Entity\Turn;
 
 /**
- * Ce que l'utilisateur envoie dans un tour : un message texte, ou une action (bouton ✅ / 🔄).
+ * Ce que l'utilisateur envoie dans un tour : un message texte (avec une photo éventuelle), ou une action (bouton ✅ / 🔄).
  */
 final class UserInput
 {
@@ -22,11 +22,27 @@ final class UserInput
         public readonly array $blocks,
         public readonly string $kind = Turn::KIND_MESSAGE,
         public readonly ?\Closure $inTransaction = null,
+        /** photo envoyée à Gemini avec ce message, à ce tour seulement (jamais stockée) */
+        public readonly ?Photo $photo = null,
     ) {
     }
 
     public static function text(string $text): self
     {
         return new self($text, [['type' => 'text', 'text' => $text]]);
+    }
+
+    /**
+     * Message avec photo : bloc photo (référence au fichier gardé sur le téléphone, par client_id) puis texte éventuel.
+     * L'historique Gemini étant en texte seul, le contenu signale la photo pour les tours suivants.
+     */
+    public static function withPhoto(string $text, Photo $photo, string $clientId): self
+    {
+        $blocks = [['type' => 'photo', 'client_id' => $clientId]];
+        if ('' !== $text) {
+            $blocks[] = ['type' => 'text', 'text' => $text];
+        }
+
+        return new self('' === $text ? '[Photo envoyée]' : '[Photo envoyée] '.$text, $blocks, photo: $photo);
     }
 }

@@ -59,6 +59,10 @@ $check('connexion → 200 + token', 200 === $status && is_string($token), (strin
 [$status, $body, , $seconds] = $call('POST', '/sessions', ['type' => 'shopping'], $token);
 $greeting = $body['messages'][0]['blocks'][0]['text'] ?? '';
 $check(sprintf('création de session → 201 avec accueil (%.1f s)', $seconds), 201 === $status && '' !== $greeting, (string) $status);
+// Message avec photo (~2,7 Mo de JSON) : le corps passe Caddy et PHP (limite 4 Mo). Format refusé → 422, sans appel Gemini.
+$bigPhoto = ['text' => 'photo', 'client_id' => '5f0c8a1e-2b3d-4e5f-8a9b-0c1d2e3f4a5b', 'photo' => ['mime' => 'image/gif', 'data' => base64_encode(random_bytes(1_900_000))]];
+[$status, $body] = $call('POST', sprintf('/sessions/%d/messages', $body['id'] ?? 0), $bigPhoto, $token);
+$check('corps de 2,7 Mo (photo) accepté par le serveur → 422 invalid_photo', 422 === $status && 'invalid_photo' === ($body['error'] ?? null), $status.' '.($body['error'] ?? ''));
 [$status, $body] = $call('GET', '/me', null, null);
 $check('route protégée sans token → 401 unauthorized', 401 === $status && 'unauthorized' === ($body['error'] ?? null));
 

@@ -40,8 +40,9 @@ final class ContextBuilder
 
     /**
      * @param string|null $userText null = tour d'accueil (l'IA parle en premier)
+     * @param Photo|null  $photo    photo jointe au message (inline_data), seulement dans ce tour
      */
-    public function build(ShoppingSession $session, ?string $userText): ConversationContext
+    public function build(ShoppingSession $session, ?string $userText, ?Photo $photo = null): ConversationContext
     {
         $promptVersion = SessionType::Onboarding === $session->getType() ? $this->onboardingPrompt : $this->shoppingPrompt;
         $systemInstruction = $this->prompts->load($promptVersion)."\n\n".$this->contextSection($session);
@@ -59,7 +60,11 @@ final class ContextBuilder
         if ([] !== $contents && 'model' === $contents[0]['role']) {
             array_unshift($contents, $kickoff);
         }
-        $contents[] = null === $userText ? $kickoff : ['role' => 'user', 'parts' => [['text' => $userText]]];
+        $parts = [['text' => (string) $userText]];
+        if (null !== $photo) {
+            array_unshift($parts, $photo->geminiPart());
+        }
+        $contents[] = null === $userText ? $kickoff : ['role' => 'user', 'parts' => $parts];
 
         return new ConversationContext($systemInstruction, $contents, $promptVersion);
     }

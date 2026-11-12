@@ -8,6 +8,7 @@ use App\Conversation\SessionManager;
 use App\Conversation\TurnResult;
 use App\Conversation\TurnRunner;
 use App\Conversation\RecipeDecision;
+use App\Conversation\Photo;
 use App\Conversation\UserInput;
 use App\Dto\RecipeDecisionRequest;
 use App\Presenter\RecipePresenter;
@@ -87,7 +88,17 @@ final class SessionController
     #[Route('/sessions/{id}/messages', name: 'sessions_send_message', requirements: ['id' => Requirement::DIGITS], methods: ['POST'])]
     public function send(#[CurrentUser] User $user, int $id, #[MapRequestPayload] SendMessageRequest $payload): JsonResponse
     {
-        $result = $this->turnRunner->send($this->findSession($user, $id), UserInput::text(trim($payload->text)), $payload->clientId);
+        $session = $this->findSession($user, $id);
+        $text = trim($payload->text);
+        if (null === $payload->photo) {
+            $input = UserInput::text($text);
+        } else {
+            if (SessionType::Shopping !== $session->getType()) {
+                throw new ApiException(409, 'not_shopping_session', 'Photos are only accepted in shopping sessions.');
+            }
+            $input = UserInput::withPhoto($text, Photo::fromPayload($payload->photo), (string) $payload->clientId);
+        }
+        $result = $this->turnRunner->send($session, $input, $payload->clientId);
 
         return $this->turnResponse($result);
     }

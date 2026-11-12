@@ -45,9 +45,9 @@ final class FakeGemini
         self::$queue[] = self::candidate([['text' => json_encode($data, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE)]]);
     }
 
-    public static function queueHttpError(int $status): void
+    public static function queueHttpError(int $status, ?string $message = null): void
     {
-        self::$queue[] = $status;
+        self::$queue[] = null === $message ? $status : ['__error' => $status, 'message' => $message];
     }
 
     /** @param array<string, mixed> $data */
@@ -76,6 +76,9 @@ final class FakeGemini
         ];
 
         $next = array_shift(self::$queue) ?? throw new \LogicException('FakeGemini: no response queued for '.$url);
+        if (\is_array($next) && isset($next['__error'])) {
+            return new MockResponse(json_encode(['error' => ['code' => $next['__error'], 'message' => $next['message']]]), ['http_code' => $next['__error'], 'response_headers' => ['content-type' => 'application/json']]);
+        }
         if (\is_int($next)) {
             return new MockResponse(json_encode(['error' => ['code' => $next, 'message' => 'fake error']]), ['http_code' => $next, 'response_headers' => ['content-type' => 'application/json']]);
         }

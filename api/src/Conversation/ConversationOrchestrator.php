@@ -22,6 +22,9 @@ use App\Prompt\PromptLoader;
  */
 final class ConversationOrchestrator
 {
+    /** Résolution des photos : medium ≈ 560 tokens par image. */
+    public const PHOTO_MEDIA_RESOLUTION = 'MEDIA_RESOLUTION_MEDIUM';
+
     /** Nombre maximal d'appels à Gemini par tour. Le dernier interdit les outils pour forcer une réponse texte. */
     public const MAX_ROUNDS = 5;
     /** Budget total d'un tour (l'app coupe à 60 s). */
@@ -42,12 +45,14 @@ final class ConversationOrchestrator
     /**
      * @param string|null $userText   null = message d'accueil
      * @param bool        $allowTools false = Gemini ne reçoit aucun outil (ex. message d'accueil)
+     * @param Photo|null  $photo      photo jointe au message : envoyée à chaque appel de CE tour (Gemini est sans état),
+     *                                jamais dans l'historique des tours suivants
      *
      * @throws GeminiException
      */
-    public function run(ShoppingSession $session, Turn $turn, ?string $userText, bool $allowTools = true): TurnOutcome
+    public function run(ShoppingSession $session, Turn $turn, ?string $userText, bool $allowTools = true, ?Photo $photo = null): TurnOutcome
     {
-        $context = $this->contextBuilder->build($session, $userText);
+        $context = $this->contextBuilder->build($session, $userText, $photo);
         $declarations = $allowTools ? $this->tools->declarationsFor($session) : [];
         $toolContext = new ToolContext($session, $session->getUser(), $turn);
         $purpose = null === $userText ? 'greeting' : 'conversation';
@@ -69,6 +74,7 @@ final class ConversationOrchestrator
                 allowToolCalls: $round < self::MAX_ROUNDS,
                 thinkingLevel: $this->thinkingLevels->for(GeminiPurpose::Chat),
                 maxDurationSeconds: null === $userText ? self::GREETING_MAX_SECONDS : null,
+                mediaResolution: null === $photo ? null : self::PHOTO_MEDIA_RESOLUTION,
             ));
 
             $text = $response->text();

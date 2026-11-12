@@ -109,7 +109,7 @@ final class TurnRunner
                 $userMessage = new Message($session, $turn, MessageRole::User, $input->content, $input->blocks);
                 $this->em->persist($userMessage);
 
-                $outcome = $this->orchestrator->run($session, $turn, $input->content);
+                $outcome = $this->orchestrator->run($session, $turn, $input->content, photo: $input->photo);
 
                 $assistantMessage = new Message($session, $turn, MessageRole::Assistant, $outcome->content, $outcome->blocks, $outcome->toolCalls ?: null);
                 $this->em->persist($assistantMessage);
