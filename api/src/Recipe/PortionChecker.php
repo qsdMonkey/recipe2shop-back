@@ -129,6 +129,29 @@ final class PortionChecker
         return [$data, $changes];
     }
 
+    /**
+     * Toutes les quantités multipliées par $factor (arrondi d'achat), étapes comprises : ex. recette faite pour 2 repas
+     * alors que la consigne en demandait 1.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    public function scaleAll(array $data, float $factor): array
+    {
+        foreach ($data['ingredients'] as $i => $ingredient) {
+            if (null === $ingredient['quantity'] || null === $ingredient['unit']) {
+                continue;
+            }
+            [$quantity, $unit] = self::roundForPurchase((float) $ingredient['quantity'] * $factor, (string) $ingredient['unit']);
+            $data['steps'] = self::replaceInSteps($data['steps'] ?? [], (float) $ingredient['quantity'], (string) $ingredient['unit'], $quantity, $unit);
+            $data['ingredients'][$i]['quantity'] = $quantity;
+            $data['ingredients'][$i]['unit'] = $unit;
+        }
+
+        return $data;
+    }
+
     /** @return array{0: ?string, 1: ?float} famille et poids moyen d'une pièce (référentiel), d'après le nom */
     private function familyOf(string $name): array
     {

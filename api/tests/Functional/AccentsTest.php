@@ -32,7 +32,7 @@ final class AccentsTest extends ApiTestCase
         $token = $this->registerUser();
         FakeGemini::queueText('Salut !');
         $session = $this->request('POST', '/sessions', ['type' => 'shopping'], $token);
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'fajitas']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'fajitas', 'meals_covered' => 3]);
         FakeGemini::queueJson(RecipeFixtures::chili(['title' => 'Fajitas', 'ingredients' => [
             ['name' => 'tortilla de ble', 'quantity' => 6, 'unit' => 'piece', 'category' => 'boulangerie', 'optional' => false],
             ['name' => 'epices a fajitas', 'quantity' => 1, 'unit' => 'sachet', 'category' => 'epicerie', 'optional' => false],

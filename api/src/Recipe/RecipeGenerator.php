@@ -103,12 +103,15 @@ final class RecipeGenerator
                     $best = [$data, $attempt];
 
                     // Portions et temps : l'IA corrige d'abord elle-même (essai suivant, avec les chiffres).
-                    $errors = $this->portions->errors($data);
+                    $errors = null !== $mealsCovered && $data['meals_covered'] !== $mealsCovered
+                        ? [\sprintf('meals_covered vaut %d, mais la consigne demande %d repas : refais la recette pour exactement %d repas (quantités = servings × %d portions).', $data['meals_covered'], $mealsCovered, $mealsCovered, $mealsCovered)]
+                        : [];
+                    array_push($errors, ...$this->portions->errors($data));
                     if (null !== $timeError = StepTimes::error($data)) {
                         $errors[] = $timeError;
                     }
                     if ([] === $errors || $attempt === self::MAX_ATTEMPTS) {
-                        return $this->finalize($session, $data, $attempt);
+                        return $this->finalize($session, $data, $attempt, $mealsCovered);
                     }
                 }
             }
@@ -119,7 +122,7 @@ final class RecipeGenerator
         }
 
         if (null !== $best) {
-            return $this->finalize($session, $best[0], $best[1]); // 2e essai invalide : on garde le 1er, corrigé
+            return $this->finalize($session, $best[0], $best[1], $mealsCovered); // 2e essai invalide : on garde le 1er, corrigé
         }
 
         throw new RecipeGenerationException($errors);
@@ -131,8 +134,15 @@ final class RecipeGenerator
      *
      * @param array<string, mixed> $data
      */
-    private function finalize(ShoppingSession $session, array $data, int $attempts): GeneratedRecipe
+    private function finalize(ShoppingSession $session, array $data, int $attempts, ?int $mealsCovered): GeneratedRecipe
     {
+        // Nombre de repas imposé par la consigne : quantités remises à l'échelle (pas de restes non demandés).
+        if (null !== $mealsCovered && $data['meals_covered'] !== $mealsCovered) {
+            $this->appLogger->warning('recipe.meals_corrected', ['before' => $data['meals_covered'], 'after' => $mealsCovered]);
+            $data = $this->portions->scaleAll($data, $mealsCovered / $data['meals_covered']);
+            $data['meals_covered'] = $mealsCovered;
+        }
+
         [$data, $changes] = $this->portions->correct($data);
         foreach ($changes as $change) {
             $this->appLogger->warning('recipe.portions_corrected', $change + ['prompt_version' => $this->promptVersion]);

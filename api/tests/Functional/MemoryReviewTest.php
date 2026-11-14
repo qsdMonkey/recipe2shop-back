@@ -107,7 +107,7 @@ final class MemoryReviewTest extends ApiTestCase
     public function testRuleOfThreeDeletesOldestSessionOnlyAfterReviewAndKeepsRecipes(): void
     {
         $s1 = $this->startSession();
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson(RecipeFixtures::chili());
         FakeGemini::queueText('Voici.');
         $recipeId = $this->say($s1, 'Une idée')['messages'][1]['blocks'][0]['recipe']['id'];

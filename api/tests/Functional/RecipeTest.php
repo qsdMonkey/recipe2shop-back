@@ -65,7 +65,7 @@ final class RecipeTest extends ApiTestCase
         $bad = RecipeFixtures::chili();
         $bad['ingredients'][1]['unit'] = null; // quantité sans unité
         $bad['suggested_day'] = 12;            // hors période
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson($bad);
         FakeGemini::queueJson(RecipeFixtures::chili());
         FakeGemini::queueText('Voici !');
@@ -82,7 +82,7 @@ final class RecipeTest extends ApiTestCase
     public function testRecipeStillInvalidAfterTwoAttemptsIsReportedToChat(): void
     {
         $session = $this->startSession();
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson(['title' => 'x']);
         FakeGemini::queueJson(['title' => 'x']);
         FakeGemini::queueText('Désolé, je réessaie autrement.');
@@ -98,9 +98,9 @@ final class RecipeTest extends ApiTestCase
     public function testOnlyOneRecipeAtATime(): void
     {
         $session = $this->startSession();
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson(RecipeFixtures::chili());
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'autre']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'autre', 'meals_covered' => 3]);
         FakeGemini::queueText('Voici une idée.');
 
         $blocks = $this->say($session, 'Deux idées ?')['messages'][1]['blocks'];

@@ -24,7 +24,7 @@ final class CookingTest extends ApiTestCase
         $session = $this->startSession();
         $bad = RecipeFixtures::chili();
         $bad['ingredients'][1] = ['name' => 'carotte', 'quantity' => 3, 'unit' => 'piece', 'category' => 'fruits_legumes', 'optional' => false];
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson($bad);
         FakeGemini::queueJson(RecipeFixtures::chili());
         FakeGemini::queueText('Voici !');
@@ -51,7 +51,7 @@ final class CookingTest extends ApiTestCase
             ['name' => 'tortilla de blé', 'quantity' => 4, 'unit' => 'piece', 'category' => 'boulangerie', 'optional' => false],
             ['name' => 'ail', 'quantity' => 2, 'unit' => 'gousse', 'category' => 'fruits_legumes', 'optional' => false],
         ];
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'omelette']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'omelette', 'meals_covered' => 3]);
         FakeGemini::queueJson($recipe);
         FakeGemini::queueText('Voici !');
 
@@ -114,7 +114,7 @@ final class CookingTest extends ApiTestCase
         $bobToken = $this->registerUser('bob@example.com');
         FakeGemini::queueText('Salut !');
         $bobSession = $this->request('POST', '/sessions', ['type' => 'shopping'], $bobToken);
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili']);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili', 'meals_covered' => 3]);
         FakeGemini::queueJson(RecipeFixtures::chili());
         FakeGemini::queueText('Voici.');
         $bobRecipe = $this->request('POST', \sprintf('/sessions/%d/messages', $bobSession['id']), ['text' => 'Une idée'], $bobToken)['messages'][1]['blocks'][0]['recipe']['id'];

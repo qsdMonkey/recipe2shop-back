@@ -142,6 +142,46 @@ final class PortionTest extends ApiTestCase
         self::assertSame(25, $card['recipe']['prep_time_min'] + $card['recipe']['cook_time_min']);
     }
 
+    public function testOneMealByDefaultAndCodeScalesUnrequestedLeftovers(): void
+    {
+        $session = $this->startSession();
+        $twoMeals = self::pasta(340) + [];
+        $twoMeals['meals_covered'] = 2; // 4 portions alors qu'on en demandait 2
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes au jambon']);
+        FakeGemini::queueJson($twoMeals);
+        FakeGemini::queueJson($twoMeals);
+        FakeGemini::queueText('Voici !');
+
+        $card = $this->say($session, 'Une idée pour ce soir ?')['messages'][1]['blocks'][0];
+
+        self::assertStringContainsString('Nombre de repas à couvrir : 1.', FakeGemini::$requests[2]['body']['contents'][0]['parts'][0]['text']);
+        self::assertStringContainsString('meals_covered vaut 2, mais la consigne demande 1 repas', FakeGemini::$requests[3]['body']['contents'][2]['parts'][0]['text']);
+        // 2e échec : le code ramène la recette à 1 repas, quantités et étapes comprises.
+        self::assertSame([1, 2], [$card['recipe']['meals_covered'], $card['recipe']['total_portions']]);
+        self::assertSame([170, 60], [$card['recipe']['ingredients'][0]['quantity'], $card['recipe']['ingredients'][1]['quantity']]);
+        self::assertSame('Fais cuire les 170 g de linguine 10 min dans l\'eau bouillante salée.', $card['recipe']['steps'][1]);
+
+        // Le prompt système ne propose plus de restes par défaut.
+        $system = FakeGemini::$requests[1]['body']['systemInstruction']['parts'][0]['text'];
+        self::assertStringContainsString('Plats pour plusieurs repas (restes, batch cooking) : PAS par défaut.', $system);
+        self::assertStringContainsString('« ce plat fait 2 repas : ce soir et demain midi »', $system);
+    }
+
+    public function testMultiMealDishWhenRequested(): void
+    {
+        $session = $this->startSession();
+        $twoMeals = self::pasta(340);
+        $twoMeals['meals_covered'] = 2;
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes au jambon, ce soir et gamelle demain', 'meals_covered' => 2]);
+        FakeGemini::queueJson($twoMeals);
+        FakeGemini::queueText('Ce plat fait 2 repas : ce soir et demain midi.');
+
+        $card = $this->say($session, 'Un plat pour ce soir et ma gamelle de demain')['messages'][1]['blocks'][0];
+
+        self::assertCount(4, FakeGemini::$requests); // pas de 2e essai
+        self::assertSame([2, 4, 340], [$card['recipe']['meals_covered'], $card['recipe']['total_portions'], $card['recipe']['ingredients'][0]['quantity']]);
+    }
+
     public function testFixPortionsCommand(): void
     {
         $em = self::getContainer()->get(EntityManagerInterface::class);
