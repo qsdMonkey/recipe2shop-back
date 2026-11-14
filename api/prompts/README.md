@@ -7,7 +7,7 @@ La version utilisée est enregistrée dans `generation_log.prompt_version` à ch
 | Fichier | Rôle |
 |---------|------|
 | `system_v9.md` | Prompt système des sessions de courses (v9 : 1 repas par recette par défaut, plusieurs repas seulement si demandé, annoncé dans le texte ; v8 : photos, l'IA reformule ce qu'elle voit). v7 : start_cooking, quantités en poids, v6 : recettes favorites, v5 : nom de l'app « Recett'IA », v4 : listes, v3 : recettes, v2 : mémoire, v1 : étape 3 |
-| `recipe_v6.md` | Génération d'une recette (appel dédié, JSON imposé par responseSchema ; v6 : meals_covered exactement celui de la consigne, 1 par défaut ; v5 : portions de référence, temps réalistes, style cuisinier ; v4 : quantités en poids, pas-à-pas détaillé, astuces ; v3 : accents exigés ; v2 : nom « Recett'IA ») |
+| `recipe_v7.md` | Génération d'une recette (appel dédié, JSON imposé par responseSchema ; v7 : servings = nombre de personnes de la consigne, féculents 80 g ; v6 : meals_covered exactement celui de la consigne, 1 par défaut ; v5 : portions de référence, temps réalistes, style cuisinier ; v4 : quantités en poids, pas-à-pas détaillé, astuces ; v3 : accents exigés ; v2 : nom « Recett'IA ») |
 | `memory_review_v2.md` | Relecture mémoire de fin de session (JSON imposé ; v2 : nom « Recett'IA ») |
 | `memory_review_intro.md` | Texte au-dessus des puces de la relecture, au début de la session suivante |
 | `onboarding_v3.md` | Prompt système de l'onboarding (v3 : nom « Recett'IA » ; v2 : update_memory / finish_onboarding). v1 : étape 3 |

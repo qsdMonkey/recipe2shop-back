@@ -62,10 +62,10 @@ final class RecipeGenerator
      * @throws GeminiException           Gemini indisponible (le tour échoue : 503)
      * @throws RecipeGenerationException recette toujours invalide après MAX_ATTEMPTS
      */
-    public function generate(ShoppingSession $session, string $brief, ?int $mealsCovered, ?int $suggestedDay): GeneratedRecipe
+    public function generate(ShoppingSession $session, string $brief, ?int $mealsCovered, ?int $suggestedDay, ?int $servings = null): GeneratedRecipe
     {
         $system = $this->prompts->load($this->promptVersion)."\n\n".$this->context($session);
-        $request = $this->instruction($brief, $mealsCovered, $suggestedDay);
+        $request = $this->instruction($brief, $mealsCovered, $suggestedDay, $servings);
         $contents = [['role' => 'user', 'parts' => [['text' => $request]]]];
 
         $errors = [];
@@ -103,15 +103,19 @@ final class RecipeGenerator
                     $best = [$data, $attempt];
 
                     // Portions et temps : l'IA corrige d'abord elle-même (essai suivant, avec les chiffres).
-                    $errors = null !== $mealsCovered && $data['meals_covered'] !== $mealsCovered
-                        ? [\sprintf('meals_covered vaut %d, mais la consigne demande %d repas : refais la recette pour exactement %d repas (quantités = servings × %d portions).', $data['meals_covered'], $mealsCovered, $mealsCovered, $mealsCovered)]
-                        : [];
+                    $errors = [];
+                    if (null !== $mealsCovered && $data['meals_covered'] !== $mealsCovered) {
+                        $errors[] = \sprintf('meals_covered vaut %d, mais la consigne demande %d repas : refais la recette pour exactement %d repas (quantités = servings × %d portions).', $data['meals_covered'], $mealsCovered, $mealsCovered, $mealsCovered);
+                    }
+                    if (null !== $servings && $data['servings'] !== $servings) {
+                        $errors[] = \sprintf('servings vaut %d, mais la consigne demande %d personnes : refais la recette pour exactement servings %d (une portion par personne, enfants compris).', $data['servings'], $servings, $servings);
+                    }
                     array_push($errors, ...$this->portions->errors($data));
                     if (null !== $timeError = StepTimes::error($data)) {
                         $errors[] = $timeError;
                     }
                     if ([] === $errors || $attempt === self::MAX_ATTEMPTS) {
-                        return $this->finalize($session, $data, $attempt, $mealsCovered);
+                        return $this->finalize($session, $data, $attempt, $mealsCovered, $servings);
                     }
                 }
             }
@@ -122,7 +126,7 @@ final class RecipeGenerator
         }
 
         if (null !== $best) {
-            return $this->finalize($session, $best[0], $best[1], $mealsCovered); // 2e essai invalide : on garde le 1er, corrigé
+            return $this->finalize($session, $best[0], $best[1], $mealsCovered, $servings); // 2e essai invalide : on garde le 1er, corrigé
         }
 
         throw new RecipeGenerationException($errors);
@@ -134,13 +138,19 @@ final class RecipeGenerator
      *
      * @param array<string, mixed> $data
      */
-    private function finalize(ShoppingSession $session, array $data, int $attempts, ?int $mealsCovered): GeneratedRecipe
+    private function finalize(ShoppingSession $session, array $data, int $attempts, ?int $mealsCovered, ?int $servings): GeneratedRecipe
     {
         // Nombre de repas imposé par la consigne : quantités remises à l'échelle (pas de restes non demandés).
         if (null !== $mealsCovered && $data['meals_covered'] !== $mealsCovered) {
             $this->appLogger->warning('recipe.meals_corrected', ['before' => $data['meals_covered'], 'after' => $mealsCovered]);
             $data = $this->portions->scaleAll($data, $mealsCovered / $data['meals_covered']);
             $data['meals_covered'] = $mealsCovered;
+        }
+        // Nombre de personnes imposé (foyer ou consigne) : même remise à l'échelle.
+        if (null !== $servings && $data['servings'] !== $servings) {
+            $this->appLogger->warning('recipe.servings_corrected', ['before' => $data['servings'], 'after' => $servings]);
+            $data = $this->portions->scaleAll($data, $servings / $data['servings']);
+            $data['servings'] = $servings;
         }
 
         [$data, $changes] = $this->portions->correct($data);
@@ -161,9 +171,12 @@ final class RecipeGenerator
         return new GeneratedRecipe($data, $this->equipmentWarnings($session, $data['equipment']), $attempts);
     }
 
-    private function instruction(string $brief, ?int $mealsCovered, ?int $suggestedDay): string
+    private function instruction(string $brief, ?int $mealsCovered, ?int $suggestedDay, ?int $servings): string
     {
         $lines = ['Consigne de l\'assistant : '.$brief];
+        if (null !== $servings) {
+            $lines[] = 'Nombre de personnes : '.$servings.'.';
+        }
         if (null !== $mealsCovered) {
             $lines[] = 'Nombre de repas à couvrir : '.$mealsCovered.'.';
         }

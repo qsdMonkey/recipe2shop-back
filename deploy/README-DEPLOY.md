@@ -97,7 +97,7 @@ $C exec php php bin/console app:recipes:fix-portions
 - `conversation.turn_failed`, `conversation.greeting_fallback` ;
 - `memory_review.done`, `memory_review.failed` ;
 - `session.deleted_rule_of_3` ;
-- `recipe.portions_corrected`, `recipe.times_corrected`, `recipe.portions_unresolved` (génération : famille et chiffres seulement) ;
+- `recipe.portions_corrected`, `recipe.times_corrected`, `recipe.meals_corrected`, `recipe.servings_corrected`, `recipe.portions_unresolved` (génération : familles et chiffres seulement) ;
 - `recipe.portions_fixed` (commande `app:recipes:fix-portions` : id de la recette).
 
 Les autres canaux (Symfony, Doctrine, Messenger) ne sont journalisés qu'à partir de `warning`.

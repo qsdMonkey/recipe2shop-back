@@ -82,8 +82,8 @@ final class PortionTest extends ApiTestCase
         self::assertStringContainsString('Portions : féculents secs (pâtes, riz, semoule, lentilles…) = 200 g par portion, attendu 70 à 100 g (2 portions = servings 2 × meals_covered 1 ; ingrédients : linguine 400 g)', $retry);
         self::assertSame([180, 'g'], [$card['recipe']['ingredients'][0]['quantity'], $card['recipe']['ingredients'][0]['unit']]);
         self::assertSame(2, $card['recipe']['total_portions']);
-        // Le prompt recipe_v5 donne le tableau des portions.
-        self::assertStringContainsString('| Féculents secs (pâtes, riz, semoule, quinoa, boulgour, lentilles sèches) | 70 à 100 g |', FakeGemini::$requests[2]['body']['systemInstruction']['parts'][0]['text']);
+        // Le prompt (depuis recipe_v5) donne le tableau des portions ; recipe_v7 vise 80 g de féculents.
+        self::assertStringContainsString('| Féculents secs (pâtes, riz, semoule, quinoa, boulgour, lentilles sèches) | 70 à 100 g (vise 80 g) |', FakeGemini::$requests[2]['body']['systemInstruction']['parts'][0]['text']);
     }
 
     public function testCodeCorrectsPortionsAfterTheSecondFailureWithoutBlocking(): void
@@ -165,6 +165,54 @@ final class PortionTest extends ApiTestCase
         $system = FakeGemini::$requests[1]['body']['systemInstruction']['parts'][0]['text'];
         self::assertStringContainsString('Plats pour plusieurs repas (restes, batch cooking) : PAS par défaut.', $system);
         self::assertStringContainsString('« ce plat fait 2 repas : ce soir et demain midi »', $system);
+    }
+
+    public function testServingsFollowTheHouseholdAndCodeScalesTheRecipe(): void
+    {
+        $this->request('POST', '/me/memory', ['category' => 'foyer', 'value' => '2 adultes et 2 enfants de 6 et 9 ans'], $this->token);
+        $session = $this->startSession();
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes au jambon']);
+        FakeGemini::queueJson(self::pasta(170)); // servings 2 pour un foyer de 4
+        FakeGemini::queueJson(self::pasta(170));
+        FakeGemini::queueText('Voici !');
+
+        $card = $this->say($session, 'Une idée pour ce soir ?')['messages'][1]['blocks'][0];
+
+        self::assertStringContainsString('Nombre de personnes : 4.', FakeGemini::$requests[2]['body']['contents'][0]['parts'][0]['text']);
+        self::assertStringContainsString('servings vaut 2, mais la consigne demande 4 personnes', FakeGemini::$requests[3]['body']['contents'][2]['parts'][0]['text']);
+        // 2e échec : le code met la recette à 4 portions, quantités et étapes comprises.
+        self::assertSame([4, 4], [$card['recipe']['servings'], $card['recipe']['total_portions']]);
+        self::assertSame([340, 240], [$card['recipe']['ingredients'][0]['quantity'], $card['recipe']['ingredients'][1]['quantity']]);
+        self::assertSame('Fais cuire les 340 g de linguine 10 min dans l\'eau bouillante salée.', $card['recipe']['steps'][1]);
+        self::assertStringContainsString('servings : EXACTEMENT le « Nombre de personnes »', FakeGemini::$requests[2]['body']['systemInstruction']['parts'][0]['text']);
+    }
+
+    public function testServingsGivenForTheDishWinOverTheHouseholdAndUnknownHouseholdIsNotForced(): void
+    {
+        $session = $this->startSession();
+        // Foyer inconnu : servings laissé à l'IA, pas de 2e essai.
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes au jambon']);
+        FakeGemini::queueJson(self::pasta(170));
+        FakeGemini::queueText('Voici !');
+        $card = $this->say($session, 'Une idée ?')['messages'][1]['blocks'][0];
+        self::assertSame(2, $card['recipe']['servings']);
+        self::assertStringNotContainsString('Nombre de personnes', FakeGemini::$requests[2]['body']['contents'][0]['parts'][0]['text']);
+        self::assertCount(4, FakeGemini::$requests);
+
+        // « On sera 6 » : donné pour ce plat, il passe avant le foyer.
+        FakeGemini::queueText('Validé.');
+        $this->request('POST', \sprintf('/sessions/%d/recipes/%d/accept', $session['id'], $card['recipe']['id']), null, $this->token);
+        $this->request('POST', '/me/memory', ['category' => 'foyer', 'value' => 'couple'], $this->token);
+        $six = self::pasta(510);
+        $six['servings'] = 6;
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes pour 6', 'servings' => 6]);
+        FakeGemini::queueJson($six);
+        FakeGemini::queueText('Voici !');
+        $calls = \count(FakeGemini::$requests);
+        $card = $this->say($session, 'On sera 6 samedi')['messages'][1]['blocks'][0];
+        self::assertSame(6, $card['recipe']['servings']);
+        self::assertCount($calls + 3, FakeGemini::$requests); // pas de 2e essai
+        self::assertStringContainsString('Nombre de personnes : 6.', FakeGemini::$requests[$calls + 1]['body']['contents'][0]['parts'][0]['text']);
     }
 
     public function testMultiMealDishWhenRequested(): void

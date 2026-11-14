@@ -84,7 +84,7 @@ final class CookingTest extends ApiTestCase
     {
         $this->request('POST', '/me/memory', ['category' => 'foyer', 'value' => '2 adultes et 2 enfants de 6 et 9 ans'], $this->token);
         $session = $this->startSession();
-        $recipeId = $this->proposeChili($session)['recipe']['id'];
+        $recipeId = $this->proposeChili($session, ['servings' => 2])['recipe']['id']; // plat pour 2 (le foyer est de 4)
 
         FakeGemini::queueFunctionCall('start_cooking', ['recipe_id' => $recipeId]);
         FakeGemini::queueText('C\'est parti ! Tout est dans le pas à pas 👇');
@@ -148,12 +148,13 @@ final class CookingTest extends ApiTestCase
 
     /**
      * @param array<string, mixed> $session
+     * @param array<string, mixed> $args    arguments en plus de propose_recipe
      *
      * @return array<string, mixed> la carte recette
      */
-    private function proposeChili(array $session): array
+    private function proposeChili(array $session, array $args = []): array
     {
-        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili végétarien', 'meals_covered' => 3]);
+        FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'chili végétarien', 'meals_covered' => 3] + $args);
         FakeGemini::queueJson(RecipeFixtures::chili());
         FakeGemini::queueText('Que dis-tu de ce chili ?');
 

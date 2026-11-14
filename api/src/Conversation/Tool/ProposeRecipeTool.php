@@ -7,6 +7,7 @@ namespace App\Conversation\Tool;
 use App\Entity\Recipe;
 use App\Entity\SessionRecipe;
 use App\Ingredient\IngredientMatcher;
+use App\Memory\HouseholdSize;
 use App\Memory\MemoryManager;
 use App\Recipe\RecipeGenerationException;
 use App\Recipe\RecipeGenerator;
@@ -26,6 +27,7 @@ final class ProposeRecipeTool implements ToolHandlerInterface
         private readonly SessionRecipeRepository $sessionRecipes,
         private readonly EntityManagerInterface $em,
         private readonly IngredientMatcher $matcher,
+        private readonly HouseholdSize $household,
     ) {
     }
 
@@ -44,6 +46,7 @@ final class ProposeRecipeTool implements ToolHandlerInterface
                 'properties' => [
                     'brief' => ['type' => 'string', 'description' => 'Consigne courte et précise : type de plat, contraintes de la semaine, ingrédients à utiliser, pour qui. Ex. « plat mijoté végétarien pour 2 dîners + 1 gamelle, sans four, avec les courgettes et le riz de l\'utilisateur ».'],
                     'meals_covered' => ['type' => 'integer', 'description' => 'Seulement pour un plat à plusieurs repas (gamelles ou restes prévus, ou accepté par l\'utilisateur) : nombre de repas couverts. Par défaut : 1 repas, sans restes.'],
+                    'servings' => ['type' => 'integer', 'description' => 'Nombre de personnes seulement si l\'utilisateur en donne un autre que son foyer pour ce plat (« on sera 6 ») ; sinon ne le donne pas : le foyer est utilisé.'],
                     'suggested_day' => ['type' => 'integer', 'description' => 'Jour de la période où la cuisiner (1 = premier jour), selon la péremption des produits frais.'],
                 ],
                 'required' => ['brief'],
@@ -70,9 +73,13 @@ final class ProposeRecipeTool implements ToolHandlerInterface
         // Un repas par défaut : pas de restes non demandés (retour de Pierre, 2026-11-14).
         $mealsCovered = \is_int($args['meals_covered'] ?? null) && $args['meals_covered'] >= 1 && $args['meals_covered'] <= 14 ? $args['meals_covered'] : 1;
         $suggestedDay = \is_int($args['suggested_day'] ?? null) ? $args['suggested_day'] : null;
+        // Nombre de personnes : celui donné pour ce plat, sinon le foyer (mémoire) ; inconnu → au choix de l'IA.
+        $servings = \is_int($args['servings'] ?? null) && $args['servings'] >= 1 && $args['servings'] <= 20
+            ? $args['servings']
+            : $this->household->forUser($context->user);
 
         try {
-            $generated = $this->generator->generate($context->session, $brief, $mealsCovered, $suggestedDay);
+            $generated = $this->generator->generate($context->session, $brief, $mealsCovered, $suggestedDay, $servings);
         } catch (RecipeGenerationException $e) {
             return ToolResult::error('La génération de la recette a échoué. Reformule une consigne plus simple ou propose autre chose.', array_slice($e->errors, 0, 5));
         }
