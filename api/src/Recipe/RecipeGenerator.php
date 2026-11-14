@@ -18,12 +18,15 @@ use App\Ingredient\AccentRestorer;
 use App\Memory\MemoryManager;
 use App\Prompt\PromptLoader;
 use App\Repository\UserMemoryRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Génère une recette en JSON strict avec un appel Gemini dédié (responseSchema, prompt recipe_vN, niveau de réflexion
  * propre), puis la valide par le code. En cas d'erreur de validation, un 2e essai reçoit les erreurs.
+ * Portions (PortionChecker) et temps (StepTimes) : erreurs renvoyées à Gemini au 1er essai ; au dernier essai, correction
+ * déterministe par le code, sans jamais bloquer la proposition.
  * « L'IA génère, le code calcule » : rien n'est enregistré ici.
  */
 final class RecipeGenerator
@@ -44,6 +47,9 @@ final class RecipeGenerator
         private readonly string $promptVersion,
         #[Autowire('%app.user_timezone%')]
         private readonly string $userTimezone,
+        private readonly PortionChecker $portions,
+        #[Autowire(service: 'monolog.logger.recipe2shop')]
+        private readonly LoggerInterface $appLogger,
     ) {
     }
 
@@ -63,6 +69,7 @@ final class RecipeGenerator
         $contents = [['role' => 'user', 'parts' => [['text' => $request]]]];
 
         $errors = [];
+        $best = null; // dernière recette valide (hors portions et temps) : corrigée par le code si besoin
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; ++$attempt) {
             $start = hrtime(true);
             try {
@@ -93,8 +100,16 @@ final class RecipeGenerator
                     foreach ($data['ingredients'] as $i => $ingredient) {
                         $data['ingredients'][$i]['name'] = $this->accents->restore($ingredient['name']);
                     }
+                    $best = [$data, $attempt];
 
-                    return new GeneratedRecipe($data, $this->equipmentWarnings($session, $data['equipment']), $attempt);
+                    // Portions et temps : l'IA corrige d'abord elle-même (essai suivant, avec les chiffres).
+                    $errors = $this->portions->errors($data);
+                    if (null !== $timeError = StepTimes::error($data)) {
+                        $errors[] = $timeError;
+                    }
+                    if ([] === $errors || $attempt === self::MAX_ATTEMPTS) {
+                        return $this->finalize($session, $data, $attempt);
+                    }
                 }
             }
 
@@ -103,7 +118,37 @@ final class RecipeGenerator
             $contents[] = ['role' => 'user', 'parts' => [['text' => "Cette recette est invalide. Corrige ces erreurs et renvoie la recette complète :\n- ".implode("\n- ", $errors)]]];
         }
 
+        if (null !== $best) {
+            return $this->finalize($session, $best[0], $best[1]); // 2e essai invalide : on garde le 1er, corrigé
+        }
+
         throw new RecipeGenerationException($errors);
+    }
+
+    /**
+     * Correction déterministe de ce que l'IA n'a pas corrigé : portions des familles « base » ramenées au milieu de la
+     * plage, temps alignés sur les étapes. Journalisé (familles et chiffres seulement, aucune donnée personnelle).
+     *
+     * @param array<string, mixed> $data
+     */
+    private function finalize(ShoppingSession $session, array $data, int $attempts): GeneratedRecipe
+    {
+        [$data, $changes] = $this->portions->correct($data);
+        foreach ($changes as $change) {
+            $this->appLogger->warning('recipe.portions_corrected', $change + ['prompt_version' => $this->promptVersion]);
+        }
+        foreach ($this->portions->measure($data) as $measure) {
+            if ($measure->isOutOfRange()) { // garniture (fromage, légumes…) : signalée, jamais modifiée
+                $this->appLogger->info('recipe.portions_unresolved', ['family' => $measure->family, 'per_portion' => round($measure->perPortion, 1)]);
+            }
+        }
+        if (null !== StepTimes::error($data)) {
+            $before = $data['prep_time_min'] + $data['cook_time_min'];
+            $data = StepTimes::correct($data);
+            $this->appLogger->warning('recipe.times_corrected', ['before_min' => $before, 'after_min' => $data['prep_time_min'] + $data['cook_time_min']]);
+        }
+
+        return new GeneratedRecipe($data, $this->equipmentWarnings($session, $data['equipment']), $attempts);
     }
 
     private function instruction(string $brief, ?int $mealsCovered, ?int $suggestedDay): string

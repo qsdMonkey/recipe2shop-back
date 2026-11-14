@@ -53,6 +53,10 @@ class Ingredient
     #[ORM\Column(type: Types::JSON)]
     private array $aliases;
 
+    /** Famille de portion (App\Recipe\PortionRules) : contrôle des quantités par portion. */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $portionFamily = null;
+
     /** @param list<string> $aliases */
     public function __construct(string $name, string $normalizedName, string $category, ?string $defaultUnit, ?int $shelfLifeDays, ?float $avgWeightPerPiece, bool $basic, bool $toReview, array $aliases = [])
     {
@@ -83,6 +87,16 @@ class Ingredient
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getPortionFamily(): ?string
+    {
+        return $this->portionFamily;
+    }
+
+    public function setPortionFamily(?string $portionFamily): void
+    {
+        $this->portionFamily = $portionFamily;
     }
 
     public function getName(): string

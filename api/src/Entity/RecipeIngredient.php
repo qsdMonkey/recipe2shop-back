@@ -78,6 +78,13 @@ class RecipeIngredient
         $this->name = $name;
     }
 
+    /** Correction de quantité (portions, pièces converties en grammes : app:recipes:fix-portions). */
+    public function changeQuantity(float|int|null $quantity, ?string $unit): void
+    {
+        $this->quantity = null === $quantity ? null : (float) $quantity;
+        $this->unit = $unit;
+    }
+
     public function getName(): string
     {
         return $this->name;

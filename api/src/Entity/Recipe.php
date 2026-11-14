@@ -189,6 +189,12 @@ class Recipe
         return $this->ingredients;
     }
 
+    /** @param list<string> $steps étapes mises à jour après une correction de quantités */
+    public function replaceSteps(array $steps): void
+    {
+        $this->steps = array_values($steps);
+    }
+
     public function getCreatedBy(): ?User
     {
         return $this->createdBy;

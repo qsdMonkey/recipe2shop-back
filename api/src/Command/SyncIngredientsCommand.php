@@ -6,6 +6,7 @@ namespace App\Command;
 
 use App\Entity\Ingredient;
 use App\Ingredient\IngredientMatcher;
+use App\Recipe\PortionRules;
 use App\Recipe\RecipeVocabulary;
 use App\Repository\IngredientRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -66,6 +67,11 @@ final class SyncIngredientsCommand extends Command
 
             $normalized = IngredientMatcher::normalize($name);
             $args = [$name, $category, '' === $unit ? null : $unit, '' === $shelf ? null : (int) $shelf, '' === $weight ? null : (float) $weight, '1' === $basic, $aliases];
+            $family = '' === ($cols[7] ?? '') ? null : $cols[7];
+            if (null !== $family && !PortionRules::isFamily($family)) {
+                $io->warning('Invalid portion family: '.$line);
+                $family = null;
+            }
             if (isset($existing[$normalized])) {
                 $existing[$normalized]->updateFromReference(...$args);
                 ++$updated;
@@ -75,6 +81,7 @@ final class SyncIngredientsCommand extends Command
                 $existing[$normalized] = $ingredient;
                 ++$created;
             }
+            $existing[$normalized]->setPortionFamily($family);
         }
         fclose($handle);
         $this->em->flush();

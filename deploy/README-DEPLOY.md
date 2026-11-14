@@ -82,6 +82,11 @@ $C exec php php bin/console messenger:failed:show              # relectures mém
 $C exec php php bin/console messenger:failed:retry             # … les relancer
 $C exec mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" recipe2shop -e "SELECT name, category FROM ingredient WHERE to_review = 1"'
 cat VERSION                             # version déployée
+
+# Recettes déjà en base : pièces → grammes et portions excessives corrigées (jamais lancé par deploy.sh).
+# Toujours simuler d'abord ; le rapport ne contient que les ids et les titres des recettes.
+$C exec php php bin/console app:recipes:fix-portions --dry-run
+$C exec php php bin/console app:recipes:fix-portions
 ```
 
 Événements journalisés (canal `recipe2shop`, JSON) :
@@ -91,7 +96,9 @@ cat VERSION                             # version déployée
 - `gemini.daily_budget_exceeded` ;
 - `conversation.turn_failed`, `conversation.greeting_fallback` ;
 - `memory_review.done`, `memory_review.failed` ;
-- `session.deleted_rule_of_3`.
+- `session.deleted_rule_of_3` ;
+- `recipe.portions_corrected`, `recipe.times_corrected`, `recipe.portions_unresolved` (génération : famille et chiffres seulement) ;
+- `recipe.portions_fixed` (commande `app:recipes:fix-portions` : id de la recette).
 
 Les autres canaux (Symfony, Doctrine, Messenger) ne sont journalisés qu'à partir de `warning`.
 

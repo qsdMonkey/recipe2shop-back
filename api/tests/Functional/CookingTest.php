@@ -69,7 +69,7 @@ final class CookingTest extends ApiTestCase
         $tips = ['Encore meilleur réchauffé le lendemain.', 'Se congèle très bien en portions.'];
 
         self::assertSame($tips, $card['recipe']['tips']);
-        self::assertSame(['steps', 'tips', 'equipment'], \array_slice(array_keys($card['recipe']), 11, 3));
+        self::assertSame(['steps', 'tips', 'equipment'], \array_slice(array_keys($card['recipe']), 12, 3));
         self::assertSame($tips, $this->request('GET', '/sessions/'.$session['id'], null, $this->token)['recipes'][0]['recipe']['tips']);
         self::assertSame($tips, $this->request('GET', "/recipes/$recipeId?servings=4", null, $this->token)['tips']);
         $this->request('PUT', "/me/favorites/$recipeId", null, $this->token);

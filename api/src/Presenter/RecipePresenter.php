@@ -52,6 +52,8 @@ final class RecipePresenter
             'description' => $recipe->getDescription(),
             'servings' => $servings ?? $recipe->getServings(),
             'meals_covered' => $recipe->getMealsCovered(),
+            // Les quantités couvrent tous les repas de la recette : servings × meals_covered portions au total.
+            'total_portions' => ($servings ?? $recipe->getServings()) * $recipe->getMealsCovered(),
             'meal_tags' => $recipe->getMealTags(),
             'prep_time_min' => $recipe->getPrepTimeMin(),
             'cook_time_min' => $recipe->getCookTimeMin(),
