@@ -19,6 +19,7 @@ use App\Memory\MemoryManager;
 use App\Prompt\PromptLoader;
 use App\Repository\UserMemoryRepository;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Clock\Clock;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -32,6 +33,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class RecipeGenerator
 {
     public const MAX_ATTEMPTS = 2;
+    /**
+     * Budget de temps de la génération (essais compris). L'app abandonne un tour à 60 s, et le tour contient aussi deux
+     * appels de chat (≈ 3 s chacun) : au-delà, l'utilisateur voit une erreur au lieu de la recette.
+     */
+    public const TIME_BUDGET_SECONDS = 45.0;
+    /** En dessous, pas de 2e essai : le code corrige la 1re recette (portions, temps, repas, personnes). */
+    public const MIN_RETRY_SECONDS = 15.0;
 
     public function __construct(
         private readonly GeminiClient $gemini,
@@ -70,7 +78,13 @@ final class RecipeGenerator
 
         $errors = [];
         $best = null; // dernière recette valide (hors portions et temps) : corrigée par le code si besoin
+        $deadline = (float) Clock::get()->now()->format('U.u') + self::TIME_BUDGET_SECONDS;
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; ++$attempt) {
+            $remaining = $deadline - (float) Clock::get()->now()->format('U.u');
+            if ($attempt > 1 && $remaining < self::MIN_RETRY_SECONDS) {
+                $this->appLogger->warning('recipe.retry_skipped', ['remaining_s' => round($remaining, 1)]);
+                break;
+            }
             $start = hrtime(true);
             try {
                 $response = $this->gemini->generate(new GeminiRequest(
@@ -78,6 +92,7 @@ final class RecipeGenerator
                     contents: $contents,
                     thinkingLevel: $this->thinkingLevels->for(GeminiPurpose::ProposeRecipe),
                     responseSchema: RecipeSchema::gemini(),
+                    maxDurationSeconds: $remaining,
                 ));
             } catch (GeminiException $e) {
                 $this->logger->record($session, GeminiPurpose::ProposeRecipe->value, $this->gemini->model(), $this->promptVersion, null, (int) ((hrtime(true) - $start) / 1_000_000), $e->getMessage());

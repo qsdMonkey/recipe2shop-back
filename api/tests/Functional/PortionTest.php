@@ -9,12 +9,16 @@ use App\Entity\SessionRecipe;
 use App\Entity\ShoppingSession;
 use App\Recipe\PortionChecker;
 use App\Recipe\PortionRules;
+use App\Recipe\RecipeGenerator;
 use App\Recipe\StepTimes;
 use App\Tests\Support\FakeGemini;
 use App\Tests\Support\RecipeFixtures;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Clock\Clock;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /** Contrôle des portions (« un plat pour 2, je me retrouve pour 4 ») et des temps. */
@@ -185,6 +189,32 @@ final class PortionTest extends ApiTestCase
         self::assertSame([340, 240], [$card['recipe']['ingredients'][0]['quantity'], $card['recipe']['ingredients'][1]['quantity']]);
         self::assertSame('Fais cuire les 340 g de linguine 10 min dans l\'eau bouillante salée.', $card['recipe']['steps'][1]);
         self::assertStringContainsString('servings : EXACTEMENT le « Nombre de personnes »', FakeGemini::$requests[2]['body']['systemInstruction']['parts'][0]['text']);
+    }
+
+    public function testSlowFirstAttemptSkipsTheRetryAndTheCodeCorrects(): void
+    {
+        $session = $this->startSession();
+        $clock = new MockClock();
+        Clock::set($clock);
+        try {
+            FakeGemini::queueFunctionCall('propose_recipe', ['brief' => 'pâtes au jambon']);
+            FakeGemini::queueJson(self::pasta(400)); // 200 g par portion
+            FakeGemini::queueText('Voici !');
+            // La génération répond en 35 s : il resterait 10 s, pas assez pour un 2e essai.
+            FakeGemini::$onRequest = static function () use ($clock): void {
+                if (3 === \count(FakeGemini::$requests)) {
+                    $clock->sleep(35);
+                }
+            };
+
+            $card = $this->say($session, 'Une idée ?')['messages'][1]['blocks'][0];
+        } finally {
+            Clock::set(new NativeClock());
+        }
+
+        self::assertCount(4, FakeGemini::$requests); // accueil, chat, 1 seule génération, chat
+        self::assertEqualsWithDelta(RecipeGenerator::TIME_BUDGET_SECONDS, FakeGemini::$requests[2]['max_duration'], 1.0);
+        self::assertSame(170, $card['recipe']['ingredients'][0]['quantity']); // ramené au milieu de la plage par le code
     }
 
     public function testServingsGivenForTheDishWinOverTheHouseholdAndUnknownHouseholdIsNotForced(): void

@@ -16,13 +16,17 @@ final class FakeGemini
     /** @var list<array<string, mixed>|int> */
     private static array $queue = [];
 
-    /** @var list<array{url: string, body: array<string, mixed>, raw: string, headers: list<string>}> */
+    /** @var list<array{url: string, body: array<string, mixed>, raw: string, headers: list<string>, max_duration: float|null}> */
     public static array $requests = [];
+
+    /** Appelé à chaque requête (ex. faire avancer une MockClock pour simuler un Gemini lent). */
+    public static ?\Closure $onRequest = null;
 
     public static function reset(): void
     {
         self::$queue = [];
         self::$requests = [];
+        self::$onRequest = null;
     }
 
     public static function queueText(string $text): void
@@ -73,7 +77,11 @@ final class FakeGemini
             'body' => json_decode((string) ($options['body'] ?? '{}'), true, flags: \JSON_THROW_ON_ERROR),
             'raw' => (string) ($options['body'] ?? ''),
             'headers' => $options['headers'] ?? [],
+            'max_duration' => isset($options['max_duration']) && $options['max_duration'] > 0 ? (float) $options['max_duration'] : null,
         ];
+        if (null !== self::$onRequest) {
+            (self::$onRequest)();
+        }
 
         $next = array_shift(self::$queue) ?? throw new \LogicException('FakeGemini: no response queued for '.$url);
         if (\is_array($next) && isset($next['__error'])) {
